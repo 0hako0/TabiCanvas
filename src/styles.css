@@ -1957,8 +1957,9 @@ time {
   .mobile-summary-card {
     position: relative;
     overflow: hidden;
-    padding: 16px;
+    padding: 14px;
     border-radius: 16px;
+    opacity: 0.92;
     background:
       radial-gradient(circle at 84% 18%, rgba(167, 196, 160, 0.2), transparent 22%),
       radial-gradient(rgba(142, 103, 71, 0.055) 0.45px, transparent 0.45px),
@@ -1990,16 +1991,16 @@ time {
   .mobile-summary-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 9px;
-    margin: 12px 0;
+    gap: 8px;
+    margin: 10px 0;
   }
 
   .mobile-summary-grid div {
-    min-height: 92px;
+    min-height: 78px;
     display: grid;
     gap: 6px;
     align-content: center;
-    padding: 10px 9px;
+    padding: 9px 8px;
     border: 1px solid rgba(234, 216, 197, 0.92);
     border-radius: 14px;
     background: rgba(255, 250, 242, 0.76);
@@ -2008,24 +2009,24 @@ time {
 
   .mobile-summary-grid svg {
     color: #e76f51;
-    opacity: 0.78;
+    opacity: 0.62;
   }
 
   .mobile-summary-grid span,
   .mobile-summary-grid small {
     color: #806b5b;
-    font-size: 0.7rem;
+    font-size: 0.66rem;
     font-weight: 800;
   }
 
   .mobile-summary-grid strong {
     color: #3f352d;
-    font-size: clamp(0.95rem, 3.4vw, 1.12rem);
+    font-size: clamp(0.88rem, 3.1vw, 1.02rem);
     line-height: 1.15;
   }
 
   .mobile-summary-card .progress-track {
-    height: 9px;
+    height: 7px;
     background: #eadfce;
   }
 
@@ -2069,13 +2070,18 @@ time {
   .mobile-memory-album {
     position: relative;
     overflow: visible;
-    padding: 18px 16px 20px;
+    padding: 20px 16px 22px;
     background:
-      radial-gradient(rgba(142, 103, 71, 0.055) 0.45px, transparent 0.45px),
+      radial-gradient(rgba(142, 103, 71, 0.06) 0.45px, transparent 0.45px),
+      radial-gradient(rgba(142, 103, 71, 0.035) 0.35px, transparent 0.35px),
       linear-gradient(transparent 25px, rgba(180, 132, 90, 0.026) 26px),
       linear-gradient(145deg, rgba(255, 253, 248, 0.99), rgba(255, 247, 235, 0.96)),
       #fffdf8;
-    background-size: 9px 9px, 26px 26px, auto, auto;
+    background-position: 0 0, 5px 7px, 0 0, 0 0, 0 0;
+    background-size: 9px 9px, 15px 15px, 26px 26px, auto, auto;
+    box-shadow:
+      0 18px 38px rgba(83, 55, 37, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.74);
   }
 
   .mobile-memory-album::before {
@@ -2118,7 +2124,7 @@ time {
   }
 
   .mobile-memory-album .section-title {
-    margin-bottom: 16px;
+    margin-bottom: 18px;
   }
 
   .mobile-memory-album .section-title h2 {
@@ -2128,6 +2134,10 @@ time {
   .mobile-dashboard-list {
     display: grid;
     gap: 12px;
+  }
+
+  .mobile-memory-album .mobile-dashboard-list {
+    gap: 0;
   }
 
   .mobile-dashboard-list button {
@@ -2149,24 +2159,38 @@ time {
     min-height: 132px;
     padding: 12px;
     text-align: left;
-    border-color: rgba(234, 216, 197, 0.72);
-    background: rgba(255, 253, 248, 0.58);
-    box-shadow: 0 10px 20px rgba(83, 55, 37, 0.07);
+    border-color: rgba(234, 216, 197, 0.52);
+    background: rgba(255, 253, 248, 0.36);
+    box-shadow: 0 8px 16px rgba(83, 55, 37, 0.055);
+  }
+
+  .mobile-memory-album .mobile-memory-card:not(.is-featured) {
+    width: calc(100% - 18px);
+    margin-top: -6px;
+  }
+
+  .mobile-memory-album .mobile-memory-card:nth-child(2) {
+    margin-left: 14px;
+    transform: rotate(0.4deg);
+  }
+
+  .mobile-memory-album .mobile-memory-card:nth-child(3) {
+    margin-left: 3px;
+    transform: rotate(-0.35deg);
   }
 
   .mobile-dashboard-list .mobile-memory-card.is-featured {
     grid-template-columns: 1fr;
     gap: 10px;
-    padding: 14px 14px 16px;
+    padding: 16px 14px 18px;
     border-color: rgba(225, 195, 164, 0.65);
-    background:
-      linear-gradient(180deg, rgba(255, 253, 248, 0.62), rgba(255, 247, 235, 0.42));
+    background: transparent;
     box-shadow: none;
   }
 
   .mobile-memory-card figure {
     position: relative;
-    width: 104px;
+    width: 108px;
     margin: 0;
     padding: 7px 7px 18px;
     border-radius: 9px;
@@ -2175,7 +2199,7 @@ time {
       #fffdf8;
     background-size: 8px 8px, auto;
     box-shadow:
-      0 14px 24px rgba(83, 55, 37, 0.17),
+      0 16px 28px rgba(83, 55, 37, 0.18),
       0 2px 2px rgba(83, 55, 37, 0.04);
     transform: rotate(-1.2deg);
   }
@@ -2194,12 +2218,12 @@ time {
   }
 
   .mobile-memory-card.is-featured figure {
-    width: min(100%, 326px);
+    width: min(100%, 342px);
     justify-self: center;
-    padding: 10px 10px 26px;
+    padding: 12px 12px 30px;
     border-radius: 10px;
     box-shadow:
-      0 18px 34px rgba(83, 55, 37, 0.19),
+      0 22px 42px rgba(83, 55, 37, 0.22),
       0 2px 2px rgba(83, 55, 37, 0.04);
   }
 
@@ -2221,7 +2245,7 @@ time {
 
   .mobile-memory-card.is-featured img,
   .mobile-memory-card.is-featured .mobile-memory-placeholder {
-    height: 206px;
+    height: 238px;
     border-radius: 6px;
   }
 
@@ -2255,11 +2279,13 @@ time {
   }
 
   .mobile-memory-card.is-featured div {
+    width: min(100%, 342px);
+    justify-self: center;
     padding: 0 8px 2px;
   }
 
   .mobile-memory-card.is-featured strong {
-    font-size: 1.2rem;
+    font-size: 1.16rem;
   }
 
   .mobile-memory-card.is-featured span {
@@ -2281,7 +2307,7 @@ time {
   .mobile-region-summary {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
+    gap: 8px;
   }
 
   .mobile-region-summary div {
@@ -2291,16 +2317,17 @@ time {
     gap: 8px 10px;
     position: relative;
     overflow: hidden;
-    padding: 13px 12px 12px;
+    padding: 10px 10px 9px;
     border: 1px solid #ead8c5;
     border-radius: 14px;
     color: #5e5044;
-    font-size: 0.82rem;
+    font-size: 0.76rem;
     font-weight: 800;
     background:
       radial-gradient(circle at 88% 18%, rgba(244, 162, 97, 0.12), transparent 20%),
       linear-gradient(145deg, #fffdf8, #fff7ec);
-    box-shadow: 0 8px 16px rgba(83, 55, 37, 0.06);
+    box-shadow: 0 6px 12px rgba(83, 55, 37, 0.045);
+    opacity: 0.9;
   }
 
   .mobile-region-summary div::before {
@@ -2317,7 +2344,7 @@ time {
 
   .mobile-region-summary .mini-track {
     grid-column: 1 / -1;
-    height: 8px;
+    height: 6px;
   }
 
   .mobile-region-summary small {
