@@ -1,5 +1,5 @@
 import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from 'react';
-import { Camera, Clock, ImagePlus, ListTodo, Loader2, LogOut, Map as MapIcon, Plus, X } from 'lucide-react';
+import { Camera, Clock, Home, ImagePlus, ListTodo, Loader2, LogOut, Map as MapIcon, Plus, Trophy, X } from 'lucide-react';
 import type { Session } from '@supabase/supabase-js';
 import { AuthScreen } from './components/AuthScreen';
 import { BadgePanel } from './components/BadgePanel';
@@ -60,7 +60,7 @@ export default function App() {
   const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([]);
   const [selected, setSelected] = useState<Prefecture>(PREFECTURES[0]);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
-  const [activeMobileView, setActiveMobileView] = useState<'map' | 'plan' | 'timeline'>('map');
+  const [activeMobileView, setActiveMobileView] = useState<'home' | 'map' | 'plan' | 'timeline'>('home');
   const [editingVisit, setEditingVisit] = useState<PrefectureVisit | null>(null);
   const [form, setForm] = useState<VisitFormState>(defaultForm);
   const [wishlistForm, setWishlistForm] = useState<WishlistFormState>(defaultWishlistForm);
@@ -146,6 +146,12 @@ export default function App() {
 
   const selectedVisits = visits.filter((visit) => visit.prefecture_id === selected.id);
   const selectedWishlistItems = wishlistItems.filter((item) => item.prefecture_id === selected.id);
+  const visitedIds = useMemo(() => new Set(visits.map((visit) => visit.prefecture_id)), [visits]);
+  const completionRate = Math.round((visitedIds.size / 47) * 100);
+  const topPrefecture = useMemo(() => {
+    const top = [...visitCounts.entries()].sort((a, b) => b[1] - a[1])[0];
+    return top ? PREFECTURES.find((prefecture) => prefecture.id === top[0])?.name ?? 'これから' : 'これから';
+  }, [visitCounts]);
 
   function handlePrefectureSelect(prefecture: Prefecture) {
     setSelected(prefecture);
@@ -158,6 +164,10 @@ export default function App() {
     setForm(defaultForm);
     setFiles(null);
     setIsEditorOpen(true);
+  }
+
+  function goToMobileView(view: 'home' | 'map' | 'plan' | 'timeline') {
+    setActiveMobileView(view);
   }
 
   function previewPrefecture(prefecture: Prefecture) {
@@ -403,6 +413,56 @@ export default function App() {
 
       {message && <p className="notice">{message}</p>}
 
+      <section className={`mobile-section mobile-home-section ${activeMobileView === 'home' ? 'is-active' : ''}`}>
+        <section className="mobile-summary-card panel">
+          <div>
+            <p className="eyebrow">YOUR JOURNEY</p>
+            <h2>旅の進み具合</h2>
+          </div>
+          <div className="mobile-summary-grid">
+            <div>
+              <Trophy size={20} />
+              <span>制覇率</span>
+              <strong>{visitedIds.size}/47県</strong>
+              <small>{completionRate}% 達成</small>
+            </div>
+            <div>
+              <MapIcon size={20} />
+              <span>旅行回数</span>
+              <strong>{visits.length}回</strong>
+            </div>
+            <div>
+              <Camera size={20} />
+              <span>一番行った県</span>
+              <strong>{topPrefecture}</strong>
+            </div>
+          </div>
+          <div className="progress-track">
+            <div style={{ width: `${completionRate}%` }} />
+          </div>
+        </section>
+
+        <section className="mobile-map-preview panel">
+          <div className="section-title">
+            <MapIcon size={18} />
+            <h2>47都道府県マップ</h2>
+          </div>
+          <JapanMap selectedId={selected.id} visitCounts={visitCounts} onSelect={handlePrefectureSelect} />
+        </section>
+
+        <section className="mobile-memory-cta panel">
+          <Camera size={28} />
+          <div>
+            <strong>思い出を記録して地図をカラフルにしていこう</strong>
+            <p>{selected.name}を選択中です。</p>
+          </div>
+          <button className="primary-button" onClick={openEditorForSelected}>
+            <Plus size={18} />
+            追加
+          </button>
+        </section>
+      </section>
+
       <nav className="mobile-view-tabs" aria-label="表示切り替え">
         <button className={activeMobileView === 'map' ? 'is-active' : ''} onClick={() => setActiveMobileView('map')}>
           <MapIcon size={18} />
@@ -491,6 +551,28 @@ export default function App() {
           onDeleteComment={deleteComment}
         />
       </section>
+
+      <nav className="mobile-bottom-nav" aria-label="メインナビゲーション">
+        <button className={activeMobileView === 'home' ? 'is-active' : ''} onClick={() => goToMobileView('home')}>
+          <Home size={20} />
+          <span>ホーム</span>
+        </button>
+        <button className={activeMobileView === 'map' ? 'is-active' : ''} onClick={() => goToMobileView('map')}>
+          <MapIcon size={20} />
+          <span>地図</span>
+        </button>
+        <button className="mobile-add-button" aria-label="記録を追加" onClick={openEditorForSelected}>
+          <Plus size={30} />
+        </button>
+        <button className={activeMobileView === 'plan' ? 'is-active' : ''} onClick={() => goToMobileView('plan')}>
+          <ListTodo size={20} />
+          <span>計画</span>
+        </button>
+        <button className={activeMobileView === 'timeline' ? 'is-active' : ''} onClick={() => goToMobileView('timeline')}>
+          <Clock size={20} />
+          <span>思い出</span>
+        </button>
+      </nav>
 
       {isEditorOpen && (
         <div className="editor-backdrop" role="dialog" aria-modal="true" aria-label={`${selected.name}の旅行記録`}>
