@@ -653,57 +653,18 @@ export default function App() {
       </section>
 
       <section className={`mobile-section mobile-home-section ${activeMobileView === 'home' ? 'is-active' : ''}`}>
-        <section className="mobile-summary-card panel">
-          <div>
-            <p className="eyebrow">YOUR JOURNEY</p>
-            <h2>旅の進み具合</h2>
-          </div>
-          <div className="mobile-summary-grid">
-            <div>
-              <Trophy size={20} />
-              <span>制覇率</span>
-              <strong>{visitedIds.size}/47県</strong>
-              <small>{completionRate}% 達成</small>
-            </div>
-            <div>
-              <MapIcon size={20} />
-              <span>旅行回数</span>
-              <strong>{visits.length}回</strong>
-            </div>
-            <div>
-              <Camera size={20} />
-              <span>一番行った県</span>
-              <strong>{topPrefecture}</strong>
-            </div>
-          </div>
-          <div className="progress-track">
-            <div style={{ width: `${completionRate}%` }} />
-          </div>
-        </section>
-
-        <section className="mobile-dashboard-actions">
-          <button className="secondary-button" onClick={goToMapView}>
-            <MapIcon size={18} />
-            地図で見る
-          </button>
-          <button className="primary-button" onClick={openPrefecturePicker}>
-            <Plus size={18} />
-            思い出を追加
-          </button>
-        </section>
-
-        <section className="panel mobile-dashboard-card">
+        <section className="panel mobile-dashboard-card mobile-memory-album">
           <div className="section-title">
             <Clock size={18} />
             <h2>最近の思い出</h2>
           </div>
           {recentVisits.length ? (
             <div className="mobile-dashboard-list">
-              {recentVisits.slice(0, 3).map((visit) => {
+              {recentVisits.slice(0, 3).map((visit, index) => {
                 const pref = PREFECTURES.find((item) => item.id === visit.prefecture_id);
                 const photo = visit.photos?.[0];
                 return (
-                  <button key={visit.id} className="mobile-memory-card" onClick={() => editVisit(visit)}>
+                  <button key={visit.id} className={`mobile-memory-card ${index === 0 ? 'is-featured' : ''}`} onClick={() => editVisit(visit)}>
                     <figure>
                       {photo?.public_url ? (
                         <img src={photo.public_url} alt={`${visit.place_name}の写真`} />
@@ -725,6 +686,45 @@ export default function App() {
           ) : (
             <p className="empty compact">まだ思い出がありません。</p>
           )}
+        </section>
+
+        <section className="mobile-dashboard-actions">
+          <button className="secondary-button" onClick={goToMapView}>
+            <MapIcon size={18} />
+            地図で見る
+          </button>
+          <button className="primary-button" onClick={openPrefecturePicker}>
+            <Plus size={18} />
+            思い出を追加
+          </button>
+        </section>
+
+        <section className="mobile-summary-card panel">
+          <div>
+            <p className="eyebrow">YOUR JOURNEY</p>
+            <h2>旅の進み具合</h2>
+          </div>
+          <div className="mobile-summary-grid">
+            <div>
+              <Trophy size={18} />
+              <span>制覇率</span>
+              <strong>{visitedIds.size}/47県</strong>
+              <small>{completionRate}% 達成</small>
+            </div>
+            <div>
+              <MapIcon size={18} />
+              <span>旅行回数</span>
+              <strong>{visits.length}回</strong>
+            </div>
+            <div>
+              <Camera size={18} />
+              <span>一番行った県</span>
+              <strong>{topPrefecture}</strong>
+            </div>
+          </div>
+          <div className="progress-track">
+            <div style={{ width: `${completionRate}%` }} />
+          </div>
         </section>
 
         <section className="panel mobile-dashboard-card">
