@@ -1,6 +1,6 @@
 import japan from '@svg-maps/japan';
-import type { Prefecture } from '../types';
 import { PREFECTURES } from '../data/prefectures';
+import type { Prefecture } from '../types';
 
 type SvgMapLocation = {
   id: string;
@@ -12,6 +12,7 @@ type Props = {
   selectedId: number;
   visitCounts: Map<number, number>;
   onSelect: (prefecture: Prefecture) => void;
+  onPreview?: (prefecture: Prefecture) => void;
 };
 
 const SVG_ID_TO_PREFECTURE_ID: Record<string, number> = {
@@ -66,7 +67,7 @@ const SVG_ID_TO_PREFECTURE_ID: Record<string, number> = {
 
 const PREFECTURE_BY_ID = new Map(PREFECTURES.map((prefecture) => [prefecture.id, prefecture]));
 
-export function JapanMap({ selectedId, visitCounts, onSelect }: Props) {
+export function JapanMap({ selectedId, visitCounts, onSelect, onPreview }: Props) {
   return (
     <div className="map-card" aria-label="日本地図">
       <div className="map-toolbar">
@@ -103,6 +104,8 @@ export function JapanMap({ selectedId, visitCounts, onSelect }: Props) {
               tabIndex={0}
               className={`prefecture-path visit-${Math.min(count, 4)} ${isSelected ? 'is-selected' : ''}`}
               aria-label={`${prefecture.name} ${count}回訪問`}
+              onMouseEnter={() => onPreview?.(prefecture)}
+              onFocus={() => onPreview?.(prefecture)}
               onClick={() => onSelect(prefecture)}
               onKeyDown={(event) => {
                 if (event.key === 'Enter' || event.key === ' ') onSelect(prefecture);

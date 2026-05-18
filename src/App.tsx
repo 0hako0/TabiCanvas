@@ -1,5 +1,20 @@
 import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from 'react';
-import { Camera, Clock, Home, ImagePlus, ListTodo, Loader2, LogOut, Map as MapIcon, Plus, Trophy, X } from 'lucide-react';
+import {
+  Award,
+  Camera,
+  CalendarDays,
+  Clock,
+  Home,
+  ImagePlus,
+  ListTodo,
+  Loader2,
+  LogOut,
+  Map as MapIcon,
+  Plus,
+  Settings,
+  Trophy,
+  X,
+} from 'lucide-react';
 import type { Session } from '@supabase/supabase-js';
 import { AuthScreen } from './components/AuthScreen';
 import { BadgePanel } from './components/BadgePanel';
@@ -152,6 +167,8 @@ export default function App() {
     const top = [...visitCounts.entries()].sort((a, b) => b[1] - a[1])[0];
     return top ? PREFECTURES.find((prefecture) => prefecture.id === top[0])?.name ?? 'これから' : 'これから';
   }, [visitCounts]);
+  const recentVisits = visits.slice(0, 5);
+  const selectedPreviewPhotos = selectedVisits.flatMap((visit) => visit.photos ?? []).slice(0, 4);
 
   function handlePrefectureSelect(prefecture: Prefecture) {
     setSelected(prefecture);
@@ -160,6 +177,15 @@ export default function App() {
 
   function openEditorForSelected() {
     resetMobileZoom();
+    setEditingVisit(null);
+    setForm(defaultForm);
+    setFiles(null);
+    setIsEditorOpen(true);
+  }
+
+  function openEditorForPrefecture(prefecture: Prefecture) {
+    resetMobileZoom();
+    setSelected(prefecture);
     setEditingVisit(null);
     setForm(defaultForm);
     setFiles(null);
@@ -412,6 +438,149 @@ export default function App() {
       </header>
 
       {message && <p className="notice">{message}</p>}
+
+      <section className="desktop-album-layout">
+        <aside className="desktop-sidebar">
+          <div className="desktop-brand">
+            <h2>TabiCanvas</h2>
+            <p>旅の思い出を、日本地図に描こう</p>
+          </div>
+          <nav className="desktop-nav" aria-label="PCナビゲーション">
+            <button className="is-active">
+              <Home size={19} />
+              ホーム
+            </button>
+            <button onClick={() => setSelected(selected)}>
+              <MapIcon size={19} />
+              地図
+            </button>
+            <button>
+              <Camera size={19} />
+              思い出
+            </button>
+            <button>
+              <ListTodo size={19} />
+              計画
+            </button>
+            <button>
+              <Award size={19} />
+              バッジ
+            </button>
+            <button onClick={() => supabase.auth.signOut()}>
+              <Settings size={19} />
+              設定
+            </button>
+          </nav>
+          <div className="desktop-sidebar-art" aria-hidden="true">
+            <Camera size={42} />
+            <span>Journey Memories</span>
+          </div>
+        </aside>
+
+        <section className="desktop-map-stage">
+          <div className="desktop-greeting">
+            <div>
+              <p className="eyebrow">Travel album</p>
+              <h2>こんにちは、{profile.nickname}さん</h2>
+              <p>地図をなぞるように、旅の記録を振り返りましょう。</p>
+            </div>
+            <button className="primary-button" onClick={openEditorForSelected}>
+              <Plus size={18} />
+              {selected.name}を記録
+            </button>
+          </div>
+
+          <StatsPanel visits={visits} />
+
+          <section className="desktop-map-card">
+            <div className="desktop-map-copy">
+              <p className="eyebrow">Japan map</p>
+              <h2>47都道府県マップ</h2>
+              <p>県にカーソルを合わせると右のアルバムが切り替わります。クリックすると記録を追加できます。</p>
+            </div>
+            <JapanMap
+              selectedId={selected.id}
+              visitCounts={visitCounts}
+              onPreview={previewPrefecture}
+              onSelect={openEditorForPrefecture}
+            />
+            <div className="desktop-hover-card">
+              <div>
+                <strong>{selected.name}</strong>
+                <span>{selectedVisits.length}件の思い出</span>
+              </div>
+              <div className="desktop-hover-photos">
+                {selectedPreviewPhotos.length ? (
+                  selectedPreviewPhotos.map((photo) => <img key={photo.id} src={photo.public_url ?? ''} alt={`${selected.name}の写真`} />)
+                ) : (
+                  <p>写真はまだありません</p>
+                )}
+              </div>
+            </div>
+          </section>
+
+          <BadgePanel visits={visits} />
+        </section>
+
+        <aside className="desktop-album-panel">
+          <section className="panel desktop-panel-block">
+            <div className="section-title">
+              <Camera size={18} />
+              <h2>最近の思い出</h2>
+            </div>
+            <div className="desktop-polaroid-list">
+              {recentVisits.length ? (
+                recentVisits.slice(0, 3).map((visit) => {
+                  const pref = PREFECTURES.find((item) => item.id === visit.prefecture_id);
+                  const photo = visit.photos?.[0];
+                  return (
+                    <article key={visit.id} className="desktop-polaroid" onClick={() => editVisit(visit)}>
+                      {photo?.public_url ? <img src={photo.public_url} alt={`${visit.place_name}の写真`} /> : <div className="desktop-photo-placeholder" />}
+                      <div>
+                        <strong>{visit.place_name}</strong>
+                        <span>{pref?.name} / {visit.visited_on}</span>
+                      </div>
+                    </article>
+                  );
+                })
+              ) : (
+                <p className="empty compact">まだ思い出がありません。地図から県をクリックして記録しましょう。</p>
+              )}
+            </div>
+          </section>
+
+          <WishlistPanel
+            selected={selected}
+            items={selectedWishlistItems}
+            form={wishlistForm}
+            onFormChange={setWishlistForm}
+            onSubmit={handleWishlistSubmit}
+            onDelete={deleteWishlistItem}
+          />
+
+          <section className="panel desktop-panel-block">
+            <div className="section-title">
+              <CalendarDays size={18} />
+              <h2>旅の記録タイムライン</h2>
+            </div>
+            <div className="desktop-mini-timeline">
+              {recentVisits.length ? (
+                recentVisits.map((visit) => {
+                  const pref = PREFECTURES.find((item) => item.id === visit.prefecture_id);
+                  return (
+                    <button key={visit.id} onClick={() => editVisit(visit)}>
+                      <span>{visit.visited_on}</span>
+                      <strong>{pref?.name}・{visit.place_name}</strong>
+                    </button>
+                  );
+                })
+              ) : (
+                <p className="empty compact">旅の記録はまだありません。</p>
+              )}
+            </div>
+          </section>
+        </aside>
+      </section>
 
       <section className={`mobile-section mobile-home-section ${activeMobileView === 'home' ? 'is-active' : ''}`}>
         <section className="mobile-summary-card panel">
