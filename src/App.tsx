@@ -909,23 +909,6 @@ export default function App() {
             onSubmit={handleWishlistSubmit}
             onDelete={deleteWishlistItem}
           />
-          <section className="panel selected-memory-panel">
-            <div className="section-title">
-              <Plus size={18} />
-              <h2>{selectedPrefecture ? `${selected.name}の記録` : '旅行記録'}</h2>
-            </div>
-            <p className="empty compact">
-              {!selectedPrefecture
-                ? '地図から都道府県を選んでください。都道府県を選ぶと、思い出や計画を確認できます。'
-                : selectedVisits.length > 0
-                ? `${selected.name}には${selectedVisits.length}件の思い出があります。思い出タブで見返せます。`
-                : 'まだ記録がありません。まず県を選び、下のボタンから思い出を追加できます。'}
-            </p>
-            <button className="primary-button add-memory-button" onClick={openEditorForSelected}>
-              <Plus size={18} />
-              {selectedPrefecture ? `${selected.name}の記録を追加` : '都道府県を選んで追加'}
-            </button>
-          </section>
         </section>
       </section>
 
