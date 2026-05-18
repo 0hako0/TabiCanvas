@@ -57,6 +57,385 @@ button {
   padding: 28px;
 }
 
+.auth-shell-travel {
+  padding: 28px;
+  background:
+    linear-gradient(135deg, rgba(255, 247, 237, 0.96), rgba(239, 249, 236, 0.9)),
+    #fff7ed;
+}
+
+.auth-travel-card {
+  width: min(100%, 1180px);
+  min-height: 680px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(360px, 0.82fr);
+  gap: 26px;
+  padding: 26px;
+  background:
+    linear-gradient(135deg, rgba(255, 244, 226, 0.94), rgba(255, 253, 248, 0.88)),
+    #fffaf2;
+}
+
+.auth-illustration {
+  position: relative;
+  min-height: 620px;
+  overflow: hidden;
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(255, 248, 236, 0.92), rgba(246, 252, 241, 0.62)),
+    #fff4e2;
+}
+
+.auth-illustration::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(142, 103, 71, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(142, 103, 71, 0.03) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.7), transparent 86%);
+}
+
+.auth-illustration-copy {
+  position: absolute;
+  left: 48px;
+  top: 54px;
+  z-index: 3;
+  width: min(440px, calc(100% - 80px));
+}
+
+.auth-illustration-copy h2 {
+  margin: 10px 0 16px;
+  color: #4b382a;
+  font-size: clamp(2rem, 4.5vw, 3.25rem);
+  line-height: 1.35;
+}
+
+.auth-illustration-copy p:last-child {
+  color: #735c4a;
+  font-size: 1rem;
+  line-height: 1.9;
+}
+
+.auth-postmark {
+  position: absolute;
+  left: 44px;
+  bottom: 72px;
+  z-index: 3;
+  width: 112px;
+  height: 112px;
+  border: 2px dashed rgba(180, 132, 90, 0.48);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: rgba(120, 83, 62, 0.64);
+  transform: rotate(-12deg);
+}
+
+.auth-postmark span {
+  font-size: 0.64rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.auth-route {
+  position: absolute;
+  color: transparent;
+  stroke: rgba(180, 132, 90, 0.42);
+  stroke-width: 1.4;
+  stroke-dasharray: 5 7;
+}
+
+.auth-route-one {
+  left: 74px;
+  top: 40px;
+  transform: rotate(18deg);
+}
+
+.auth-route-two {
+  right: 46px;
+  top: 230px;
+  transform: rotate(124deg);
+}
+
+.auth-plane {
+  position: absolute;
+  left: 86px;
+  top: 360px;
+  z-index: 2;
+  color: rgba(72, 137, 132, 0.68);
+  transform: rotate(-22deg);
+}
+
+.auth-pin {
+  position: absolute;
+  z-index: 4;
+  color: #e76f51;
+  fill: rgba(231, 111, 81, 0.16);
+}
+
+.auth-pin-north {
+  right: 176px;
+  top: 150px;
+  color: #6f8f6a;
+}
+
+.auth-pin-center {
+  right: 300px;
+  top: 354px;
+}
+
+.auth-pin-south {
+  left: 132px;
+  bottom: 244px;
+  color: #a7c4a0;
+}
+
+.auth-japan-map {
+  position: absolute;
+  right: 88px;
+  top: 86px;
+  width: 460px;
+  height: 510px;
+  opacity: 0.86;
+  filter: drop-shadow(0 14px 18px rgba(83, 55, 37, 0.08));
+}
+
+.auth-japan-map span {
+  position: absolute;
+  display: block;
+  border: 2px solid rgba(255, 253, 248, 0.78);
+  background:
+    radial-gradient(circle at 38% 32%, rgba(255, 255, 255, 0.38), transparent 34%),
+    linear-gradient(135deg, rgba(167, 196, 160, 0.82), rgba(244, 162, 97, 0.7));
+  box-shadow: inset 0 0 18px rgba(120, 83, 62, 0.06);
+}
+
+.auth-japan-map .hokkaido {
+  right: 24px;
+  top: 0;
+  width: 150px;
+  height: 112px;
+  border-radius: 48% 58% 46% 54%;
+  transform: rotate(22deg);
+  background:
+    radial-gradient(circle at 40% 38%, rgba(255, 255, 255, 0.36), transparent 34%),
+    #b7d1ab;
+}
+
+.auth-japan-map .tohoku {
+  right: 118px;
+  top: 118px;
+  width: 92px;
+  height: 168px;
+  border-radius: 48% 42% 52% 46%;
+  transform: rotate(-18deg);
+  background: #c5d9aa;
+}
+
+.auth-japan-map .kanto {
+  right: 162px;
+  top: 272px;
+  width: 92px;
+  height: 78px;
+  border-radius: 44% 56% 42% 58%;
+  transform: rotate(-14deg);
+  background: #f4a261;
+}
+
+.auth-japan-map .chubu {
+  right: 222px;
+  top: 238px;
+  width: 118px;
+  height: 104px;
+  border-radius: 48% 48% 54% 42%;
+  transform: rotate(-24deg);
+  background: #efc981;
+}
+
+.auth-japan-map .kansai {
+  right: 306px;
+  top: 316px;
+  width: 96px;
+  height: 70px;
+  border-radius: 42% 58% 46% 54%;
+  transform: rotate(-12deg);
+  background: #f09a72;
+}
+
+.auth-japan-map .chugoku {
+  right: 374px;
+  top: 344px;
+  width: 102px;
+  height: 58px;
+  border-radius: 46% 54% 48% 52%;
+  transform: rotate(-10deg);
+  background: #efa073;
+}
+
+.auth-japan-map .shikoku {
+  right: 344px;
+  top: 404px;
+  width: 82px;
+  height: 42px;
+  border-radius: 50%;
+  transform: rotate(-8deg);
+  background: #eeb168;
+}
+
+.auth-japan-map .kyushu {
+  right: 430px;
+  top: 402px;
+  width: 84px;
+  height: 112px;
+  border-radius: 48% 44% 52% 48%;
+  transform: rotate(18deg);
+  background: #ee8f72;
+}
+
+.auth-japan-map .okinawa {
+  right: 372px;
+  top: 494px;
+  width: 46px;
+  height: 18px;
+  border-radius: 999px;
+  transform: rotate(-14deg);
+  background: #a7c4a0;
+}
+
+.auth-photo-card,
+.auth-camera,
+.auth-notebook {
+  position: absolute;
+  z-index: 4;
+  border: 1px solid rgba(142, 103, 71, 0.16);
+  border-radius: 8px;
+  background: rgba(255, 253, 248, 0.86);
+  box-shadow: 0 18px 34px rgba(83, 55, 37, 0.14);
+}
+
+.auth-photo-card {
+  width: 116px;
+  height: 132px;
+  display: grid;
+  place-items: center;
+  color: #6f8f6a;
+}
+
+.photo-one {
+  right: 148px;
+  bottom: 118px;
+  transform: rotate(-8deg);
+}
+
+.photo-two {
+  right: 38px;
+  bottom: 96px;
+  color: #e76f51;
+  transform: rotate(10deg);
+}
+
+.auth-camera {
+  right: 282px;
+  bottom: 76px;
+  width: 150px;
+  height: 102px;
+  display: grid;
+  place-items: center;
+  color: #78533e;
+  background: linear-gradient(#fffdf8 0 42%, #c4895e 42%);
+}
+
+.auth-notebook {
+  left: 220px;
+  bottom: 36px;
+  width: 210px;
+  height: 126px;
+  display: grid;
+  place-items: center;
+  color: #9d744d;
+  transform: rotate(4deg);
+}
+
+.auth-notebook span {
+  color: #9d744d;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.auth-form-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 48px;
+  border: 1px solid rgba(142, 103, 71, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 20px 50px rgba(83, 55, 37, 0.09);
+}
+
+.auth-brand-mark {
+  margin: 0 auto 16px;
+  color: #6f8f6a;
+}
+
+.auth-form-panel .eyebrow,
+.auth-form-panel h1,
+.auth-form-panel .lead,
+.auth-subcopy {
+  text-align: center;
+}
+
+.auth-form-panel h1 {
+  font-size: clamp(2.4rem, 5vw, 3.4rem);
+}
+
+.auth-form-panel .lead {
+  margin-bottom: 4px;
+  color: #3f352d;
+  font-size: 1.08rem;
+  font-weight: 800;
+}
+
+.auth-subcopy {
+  margin-bottom: 28px;
+  color: #806b5b;
+  line-height: 1.8;
+}
+
+.auth-form {
+  gap: 18px;
+}
+
+.input-with-icon {
+  position: relative;
+  display: block;
+}
+
+.input-with-icon svg {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  color: #9d8776;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.input-with-icon input {
+  padding-left: 46px;
+}
+
+.auth-submit {
+  margin-top: 4px;
+  min-height: 54px;
+  font-size: 1.02rem;
+}
+
+.auth-switch {
+  margin-top: 18px;
+}
+
 .brand-mark {
   width: 52px;
   height: 52px;
@@ -908,6 +1287,84 @@ time {
 }
 
 @media (max-width: 900px) {
+  .auth-shell-travel {
+    align-items: start;
+    padding: 14px;
+  }
+
+  .auth-travel-card {
+    min-height: 0;
+    grid-template-columns: 1fr;
+    gap: 0;
+    padding: 12px;
+  }
+
+  .auth-illustration {
+    min-height: 310px;
+  }
+
+  .auth-illustration-copy {
+    left: 22px;
+    top: 24px;
+    width: min(320px, calc(100% - 40px));
+  }
+
+  .auth-illustration-copy h2 {
+    font-size: 1.65rem;
+    line-height: 1.35;
+  }
+
+  .auth-illustration-copy p:last-child {
+    font-size: 0.9rem;
+    line-height: 1.7;
+  }
+
+  .auth-japan-map {
+    right: -80px;
+    top: 42px;
+    width: 330px;
+    height: 360px;
+    opacity: 0.58;
+  }
+
+  .auth-postmark {
+    left: 22px;
+    bottom: 20px;
+    width: 76px;
+    height: 76px;
+  }
+
+  .auth-postmark span {
+    display: none;
+  }
+
+  .auth-plane {
+    left: auto;
+    right: 22px;
+    top: 34px;
+    width: 38px;
+    height: 38px;
+  }
+
+  .auth-pin,
+  .auth-route-two,
+  .auth-photo-card,
+  .auth-camera,
+  .auth-notebook {
+    display: none;
+  }
+
+  .auth-route-one {
+    left: 18px;
+    top: 8px;
+    width: 112px;
+    height: 112px;
+  }
+
+  .auth-form-panel {
+    padding: 28px 20px 24px;
+  }
+
   .page-shell {
     padding-bottom: 92px;
   }
@@ -1014,6 +1471,34 @@ time {
 }
 
 @media (max-width: 540px) {
+  .auth-shell-travel {
+    padding: 10px;
+  }
+
+  .auth-travel-card {
+    padding: 8px;
+  }
+
+  .auth-illustration {
+    min-height: 250px;
+  }
+
+  .auth-illustration-copy h2 {
+    font-size: 1.42rem;
+  }
+
+  .auth-illustration-copy p:last-child {
+    max-width: 240px;
+  }
+
+  .auth-form-panel {
+    padding: 24px 16px;
+  }
+
+  .auth-form-panel h1 {
+    font-size: 2.35rem;
+  }
+
   .page-shell {
     padding: 12px;
     padding-bottom: 86px;
@@ -1023,6 +1508,10 @@ time {
   .setup-panel,
   .panel {
     padding: 18px;
+  }
+
+  .auth-travel-card {
+    padding: 8px;
   }
 
   .stats-grid {
