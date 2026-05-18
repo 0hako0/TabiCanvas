@@ -5,7 +5,7 @@ import type { Prefecture, PrefectureVisit, Profile, VisitComment } from '../type
 
 type Props = {
   visits: PrefectureVisit[];
-  selected: Prefecture;
+  selected: Prefecture | null;
   currentUserId: string;
   profiles: Profile[];
   onEditVisit: (visit: PrefectureVisit) => void;
@@ -24,11 +24,13 @@ export function TimelinePanel({
   onSaveComment,
   onDeleteComment,
 }: Props) {
-  const [scope, setScope] = useState<'selected' | 'all'>('selected');
+  const [scope, setScope] = useState<'selected' | 'all'>('all');
+
   useEffect(() => {
-    setScope('selected');
-  }, [selected.id]);
-  const scopedVisits = scope === 'selected' ? visits.filter((visit) => visit.prefecture_id === selected.id) : visits;
+    setScope(selected ? 'selected' : 'all');
+  }, [selected?.id]);
+
+  const scopedVisits = scope === 'selected' && selected ? visits.filter((visit) => visit.prefecture_id === selected.id) : visits;
   const recentVisits = scopedVisits.slice(0, 12);
 
   return (
@@ -36,10 +38,10 @@ export function TimelinePanel({
       <div className="timeline-head">
         <div className="section-title">
           <Clock size={18} />
-          <h2>{scope === 'selected' ? `${selected.name}の思い出` : 'すべての思い出'}</h2>
+          <h2>{scope === 'selected' && selected ? `${selected.name}の思い出` : 'すべての思い出'}</h2>
         </div>
         <div className="segmented-control" aria-label="タイムライン表示切り替え">
-          <button className={scope === 'selected' ? 'is-active' : ''} onClick={() => setScope('selected')}>
+          <button className={scope === 'selected' ? 'is-active' : ''} onClick={() => setScope('selected')} disabled={!selected}>
             選択中の県
           </button>
           <button className={scope === 'all' ? 'is-active' : ''} onClick={() => setScope('all')}>
@@ -49,9 +51,9 @@ export function TimelinePanel({
       </div>
       {recentVisits.length === 0 ? (
         <p className="empty">
-          {scope === 'selected'
-            ? `${selected.name}の旅行記録はまだありません。地図から県をクリックして思い出を残しましょう。`
-            : 'まだ旅行記録がありません。地図から県を選んで最初の思い出を残しましょう。'}
+          {scope === 'selected' && selected
+            ? `${selected.name}の旅行記録はまだありません。`
+            : 'まだ旅行記録がありません。地図から都道府県を選んで、最初の思い出を残しましょう。'}
         </p>
       ) : (
         recentVisits.map((visit) => (
@@ -107,9 +109,7 @@ function TimelineCard({
       <div className="visit-card-head">
         <div>
           <time>{visit.visited_on}</time>
-          <h3>
-            {prefectureName}・{visit.place_name}
-          </h3>
+          <h3>{prefectureName}・{visit.place_name}</h3>
         </div>
         <div className="card-actions">
           <button className="icon-button small" aria-label="旅行記録を編集" onClick={() => onEditVisit(visit)}>
@@ -140,7 +140,7 @@ function TimelineCard({
       <div className="comment-box">
         <div className="comment-title">
           <MessageCircle size={16} />
-          <strong>ふたりのコメント</strong>
+          <strong>コメント</strong>
         </div>
         {partnerComments.map((comment) => (
           <div key={comment.id} className="comment-bubble partner">
@@ -161,7 +161,7 @@ function TimelineCard({
           <input
             value={commentBody}
             onChange={(event) => setCommentBody(event.target.value)}
-            placeholder="自分のコメントを書く"
+            placeholder="コメントを書く"
           />
           <button className="secondary-button">{myComment ? '更新' : '保存'}</button>
         </form>

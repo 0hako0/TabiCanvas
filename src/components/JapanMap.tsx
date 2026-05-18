@@ -9,7 +9,7 @@ type SvgMapLocation = {
 };
 
 type Props = {
-  selectedId: number;
+  selectedId: number | null;
   visitCounts: Map<number, number>;
   onSelect: (prefecture: Prefecture) => void;
   onPreview?: (prefecture: Prefecture) => void;

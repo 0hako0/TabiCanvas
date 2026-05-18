@@ -54,6 +54,14 @@ const defaultWishlistForm: WishlistFormState = {
   memo: '',
 };
 
+const NO_PREFECTURE_SELECTED: Prefecture = {
+  id: 0,
+  name: '都道府県を選んでください',
+  region: '',
+  x: 0,
+  y: 0,
+};
+
 function resetMobileZoom() {
   const viewport = document.querySelector<HTMLMetaElement>('meta[name="viewport"]');
   if (!viewport) return;
@@ -74,7 +82,7 @@ export default function App() {
   const [nickname, setNickname] = useState('');
   const [visits, setVisits] = useState<PrefectureVisit[]>([]);
   const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([]);
-  const [selected, setSelected] = useState<Prefecture>(PREFECTURES[0]);
+  const [selectedPrefecture, setSelected] = useState<Prefecture | null>(null);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [isPrefecturePickerOpen, setIsPrefecturePickerOpen] = useState(false);
   const [activeMobileView, setActiveMobileView] = useState<'home' | 'map' | 'plan' | 'timeline'>('home');
@@ -164,8 +172,9 @@ export default function App() {
     }, new Map());
   }, [visits]);
 
-  const selectedVisits = visits.filter((visit) => visit.prefecture_id === selected.id);
-  const selectedWishlistItems = wishlistItems.filter((item) => item.prefecture_id === selected.id);
+  const selected = selectedPrefecture ?? NO_PREFECTURE_SELECTED;
+  const selectedVisits = selectedPrefecture ? visits.filter((visit) => visit.prefecture_id === selectedPrefecture.id) : [];
+  const selectedWishlistItems = selectedPrefecture ? wishlistItems.filter((item) => item.prefecture_id === selectedPrefecture.id) : [];
   const visitedIds = useMemo(() => new Set(visits.map((visit) => visit.prefecture_id)), [visits]);
   const wishlistIds = useMemo(() => new Set(wishlistItems.map((item) => item.prefecture_id)), [wishlistItems]);
   const completionRate = Math.round((visitedIds.size / 47) * 100);
@@ -196,6 +205,10 @@ export default function App() {
   }
 
   function openEditorForSelected() {
+    if (!selectedPrefecture) {
+      openPrefecturePicker();
+      return;
+    }
     resetMobileZoom();
     setIsMapSheetOpen(false);
     setIsPrefecturePickerOpen(false);
@@ -248,19 +261,19 @@ export default function App() {
     setIsMapSheetOpen(false);
   }
 
-  function previewPrefecture(prefecture: Prefecture) {
-    setSelected(prefecture);
+  function previewPrefecture(_prefecture: Prefecture) {
+    // Hover/focus previews should not become the app-wide selected prefecture.
   }
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    if (!couple) return;
+    if (!couple || !selectedPrefecture) return;
     setSaving(true);
     setMessage('');
 
     const payload = {
       couple_id: couple.id,
-      prefecture_id: selected.id,
+      prefecture_id: selectedPrefecture.id,
       visited_on: form.visited_on,
       place_name: form.place_name,
       memo: form.memo || null,
@@ -385,10 +398,10 @@ export default function App() {
 
   async function handleWishlistSubmit(event: FormEvent) {
     event.preventDefault();
-    if (!couple) return;
+    if (!couple || !selectedPrefecture) return;
     const { error } = await supabase.from('wishlist').insert({
       couple_id: couple.id,
-      prefecture_id: selected.id,
+      prefecture_id: selectedPrefecture.id,
       title: wishlistForm.title,
       food: wishlistForm.food || null,
       sightseeing: wishlistForm.sightseeing || null,
@@ -551,7 +564,7 @@ export default function App() {
               <p>県にカーソルを合わせると右のアルバムが切り替わります。クリックすると記録を追加できます。</p>
             </div>
             <JapanMap
-              selectedId={selected.id}
+              selectedId={selectedPrefecture?.id ?? null}
               visitCounts={visitCounts}
               onPreview={previewPrefecture}
               onSelect={openEditorForPrefecture}
@@ -602,7 +615,7 @@ export default function App() {
           </section>
 
           <WishlistPanel
-            selected={selected}
+            selected={selectedPrefecture}
             items={selectedWishlistItems}
             form={wishlistForm}
             onFormChange={setWishlistForm}
@@ -668,7 +681,7 @@ export default function App() {
             <MapIcon size={18} />
             <h2>47都道府県マップ</h2>
           </div>
-          <JapanMap selectedId={selected.id} visitCounts={visitCounts} onSelect={handlePrefectureSelect} />
+          <JapanMap selectedId={selectedPrefecture?.id ?? null} visitCounts={visitCounts} onSelect={handlePrefectureSelect} />
         </section>
 
         <section className="mobile-memory-cta panel" hidden>
@@ -809,6 +822,11 @@ export default function App() {
             <span><i className="legend-swatch visit-4" />複数回訪問</span>
             <span><i className="legend-swatch wishlist" />行きたい県</span>
           </div>
+          {!selectedPrefecture && (
+            <p className="empty compact">
+              地図から都道府県を選んでください。都道府県を選ぶと、思い出や計画を確認できます。
+            </p>
+          )}
         </section>
 
         <section className="map-layout">
@@ -820,7 +838,7 @@ export default function App() {
             <div className="prefecture-list-grid">
               {PREFECTURES.map((prefecture) => {
                 const count = visitCounts.get(prefecture.id) ?? 0;
-                const isSelected = selected.id === prefecture.id;
+                const isSelected = selectedPrefecture?.id === prefecture.id;
                 return (
                   <button
                     key={prefecture.id}
@@ -837,7 +855,7 @@ export default function App() {
             </div>
           </aside>
           <JapanMap
-            selectedId={selected.id}
+            selectedId={selectedPrefecture?.id ?? null}
             visitCounts={visitCounts}
             highlightedIds={filteredPrefectureIds}
             wishlistIds={wishlistIds}
@@ -846,7 +864,7 @@ export default function App() {
         </section>
       </section>
 
-      {activeMobileView === 'map' && isMapSheetOpen && (
+      {activeMobileView === 'map' && isMapSheetOpen && selectedPrefecture && (
         <section className="map-bottom-sheet" aria-label={`${selected.name}の概要`}>
           <div className="sheet-handle" />
           <div className="map-sheet-head">
@@ -884,7 +902,7 @@ export default function App() {
       <section className={`mobile-section ${activeMobileView === 'plan' ? 'is-active' : ''}`}>
         <section className="detail-grid">
           <WishlistPanel
-            selected={selected}
+            selected={selectedPrefecture}
             items={selectedWishlistItems}
             form={wishlistForm}
             onFormChange={setWishlistForm}
@@ -894,16 +912,18 @@ export default function App() {
           <section className="panel selected-memory-panel">
             <div className="section-title">
               <Plus size={18} />
-              <h2>{selected.name}の記録</h2>
+              <h2>{selectedPrefecture ? `${selected.name}の記録` : '旅行記録'}</h2>
             </div>
             <p className="empty compact">
-              {selectedVisits.length > 0
+              {!selectedPrefecture
+                ? '地図から都道府県を選んでください。都道府県を選ぶと、思い出や計画を確認できます。'
+                : selectedVisits.length > 0
                 ? `${selected.name}には${selectedVisits.length}件の思い出があります。思い出タブで見返せます。`
                 : 'まだ記録がありません。まず県を選び、下のボタンから思い出を追加できます。'}
             </p>
             <button className="primary-button add-memory-button" onClick={openEditorForSelected}>
               <Plus size={18} />
-              {selected.name}の記録を追加
+              {selectedPrefecture ? `${selected.name}の記録を追加` : '都道府県を選んで追加'}
             </button>
           </section>
         </section>
@@ -912,7 +932,7 @@ export default function App() {
       <section className={`mobile-section ${activeMobileView === 'timeline' ? 'is-active' : ''}`}>
         <TimelinePanel
           visits={visits}
-          selected={selected}
+          selected={selectedPrefecture}
           currentUserId={session.user.id}
           profiles={profiles}
           onEditVisit={editVisit}
@@ -967,15 +987,21 @@ export default function App() {
               />
             </label>
 
+            {selectedPrefecture ? (
             <div className="picker-suggestion">
               <span>選択中の県</span>
-              <button onClick={() => choosePrefectureForNewVisit(selected)}>
-                {selected.name}に追加
+              <button onClick={() => choosePrefectureForNewVisit(selectedPrefecture)}>
+                {selectedPrefecture.name}に追加
                 <small>
-                  {visitCounts.get(selected.id) ?? 0}回訪問 / {wishlistIds.has(selected.id) ? '行きたい県' : visitedIds.has(selected.id) ? '訪問済み' : '未訪問'}
+                  {visitCounts.get(selectedPrefecture.id) ?? 0}回訪問 / {wishlistIds.has(selectedPrefecture.id) ? '行きたい県' : visitedIds.has(selectedPrefecture.id) ? '訪問済み' : '未訪問'}
                 </small>
               </button>
             </div>
+            ) : (
+              <p className="empty compact">
+                地図から都道府県を選んでください。都道府県を選ぶと、思い出や計画を確認できます。
+              </p>
+            )}
 
             <div className="picker-region-list">
               {REGIONS.map((region) => {
@@ -992,7 +1018,7 @@ export default function App() {
                         return (
                           <button
                             key={prefecture.id}
-                            className={`${selected.id === prefecture.id ? 'is-selected' : ''} ${isVisited ? 'is-visited' : ''}`}
+                            className={`${selectedPrefecture?.id === prefecture.id ? 'is-selected' : ''} ${isVisited ? 'is-visited' : ''}`}
                             onClick={() => choosePrefectureForNewVisit(prefecture)}
                           >
                             <span>{prefecture.name}</span>
