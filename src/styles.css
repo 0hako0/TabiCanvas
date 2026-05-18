@@ -124,6 +124,7 @@ textarea {
   border-radius: 8px;
   background: #fffdf8;
   color: #3f352d;
+  font-size: 16px;
   padding: 12px 13px;
   outline: none;
 }
@@ -282,6 +283,11 @@ textarea:focus {
 .selected-memory-panel {
   padding: 14px;
   margin-bottom: 16px;
+}
+
+.add-memory-button {
+  width: 100%;
+  margin-top: 12px;
 }
 
 .badge-grid {
@@ -923,6 +929,7 @@ time {
 
   .japan-map {
     aspect-ratio: 438 / 548;
+    max-height: 62vh;
   }
 
   .map-card {

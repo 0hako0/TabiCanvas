@@ -136,6 +136,9 @@ export default function App() {
 
   function handlePrefectureSelect(prefecture: Prefecture) {
     setSelected(prefecture);
+  }
+
+  function openEditorForSelected() {
     setEditingVisit(null);
     setForm(defaultForm);
     setFiles(null);
@@ -433,8 +436,12 @@ export default function App() {
           <p className="empty compact">
             {selectedVisits.length > 0
               ? `${selected.name}には${selectedVisits.length}件の思い出があります。下のタイムラインで見返せます。`
-              : 'まだ記録がありません。地図または一覧から県をクリックして追加できます。'}
+              : 'まだ記録がありません。まず県を選び、下のボタンから思い出を追加できます。'}
           </p>
+          <button className="primary-button add-memory-button" onClick={openEditorForSelected}>
+            <Plus size={18} />
+            {selected.name}の記録を追加
+          </button>
         </section>
       </section>
 
