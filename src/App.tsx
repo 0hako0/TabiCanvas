@@ -495,7 +495,7 @@ export default function App() {
 
   return (
     <main className="page-shell">
-      <header className="app-header">
+      <header className={`app-header ${activeMobileView === 'home' ? 'is-home' : ''}`}>
         <div>
           <h1>TabiCanvas</h1>
           <p>
@@ -701,10 +701,23 @@ export default function App() {
             <div className="mobile-dashboard-list">
               {recentVisits.slice(0, 3).map((visit) => {
                 const pref = PREFECTURES.find((item) => item.id === visit.prefecture_id);
+                const photo = visit.photos?.[0];
                 return (
-                  <button key={visit.id} onClick={() => editVisit(visit)}>
-                    <span>{visit.visited_on}</span>
-                    <strong>{pref?.name}・{visit.place_name}</strong>
+                  <button key={visit.id} className="mobile-memory-card" onClick={() => editVisit(visit)}>
+                    <figure>
+                      {photo?.public_url ? (
+                        <img src={photo.public_url} alt={`${visit.place_name}の写真`} />
+                      ) : (
+                        <div className="mobile-memory-placeholder">
+                          <Camera size={20} />
+                        </div>
+                      )}
+                    </figure>
+                    <div>
+                      <span>{visit.visited_on}</span>
+                      <strong>{pref?.name}・{visit.place_name}</strong>
+                      {visit.memo && <small>{visit.memo}</small>}
+                    </div>
                   </button>
                 );
               })}
