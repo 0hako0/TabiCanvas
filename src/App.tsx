@@ -83,6 +83,7 @@ export default function App() {
   const [visits, setVisits] = useState<PrefectureVisit[]>([]);
   const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([]);
   const [selectedPrefecture, setSelected] = useState<Prefecture | null>(null);
+  const [hoveredPrefecture, setHoveredPrefecture] = useState<Prefecture | null>(null);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [isPrefecturePickerOpen, setIsPrefecturePickerOpen] = useState(false);
   const [activeMobileView, setActiveMobileView] = useState<'home' | 'map' | 'plan' | 'timeline'>('home');
@@ -175,6 +176,10 @@ export default function App() {
   const selected = selectedPrefecture ?? NO_PREFECTURE_SELECTED;
   const selectedVisits = selectedPrefecture ? visits.filter((visit) => visit.prefecture_id === selectedPrefecture.id) : [];
   const selectedWishlistItems = selectedPrefecture ? wishlistItems.filter((item) => item.prefecture_id === selectedPrefecture.id) : [];
+  const desktopPreviewPrefecture = hoveredPrefecture ?? selectedPrefecture;
+  const desktopPreviewVisits = desktopPreviewPrefecture
+    ? visits.filter((visit) => visit.prefecture_id === desktopPreviewPrefecture.id)
+    : [];
   const visitedIds = useMemo(() => new Set(visits.map((visit) => visit.prefecture_id)), [visits]);
   const wishlistIds = useMemo(() => new Set(wishlistItems.map((item) => item.prefecture_id)), [wishlistItems]);
   const completionRate = Math.round((visitedIds.size / 47) * 100);
@@ -183,7 +188,7 @@ export default function App() {
     return top ? PREFECTURES.find((prefecture) => prefecture.id === top[0])?.name ?? 'これから' : 'これから';
   }, [visitCounts]);
   const recentVisits = visits.slice(0, 5);
-  const selectedPreviewPhotos = selectedVisits.flatMap((visit) => visit.photos ?? []).slice(0, 4);
+  const selectedPreviewPhotos = desktopPreviewVisits.flatMap((visit) => visit.photos ?? []).slice(0, 4);
   const selectedPhotoCount = selectedVisits.reduce((total, visit) => total + (visit.photos?.length ?? 0), 0);
   const latestSelectedVisit = selectedVisits[0];
   const nextWishlistItems = wishlistItems.slice(0, 3);
@@ -262,7 +267,7 @@ export default function App() {
   }
 
   function previewPrefecture(_prefecture: Prefecture) {
-    // Hover/focus previews should not become the app-wide selected prefecture.
+    setHoveredPrefecture(_prefecture);
   }
 
   async function handleSubmit(event: FormEvent) {
@@ -557,7 +562,7 @@ export default function App() {
 
           <StatsPanel visits={visits} />
 
-          <section className="desktop-map-card">
+          <section className="desktop-map-card" onMouseLeave={() => setHoveredPrefecture(null)}>
             <div className="desktop-map-copy">
               <p className="eyebrow">Japan map</p>
               <h2>47都道府県マップ</h2>
@@ -571,14 +576,14 @@ export default function App() {
             />
             <div className="desktop-hover-card">
               <div>
-                <strong>{selected.name}</strong>
-                <span>{selectedVisits.length}件の思い出</span>
+                <strong>{desktopPreviewPrefecture?.name ?? '都道府県を選んでください'}</strong>
+                <span>{desktopPreviewPrefecture ? `${desktopPreviewVisits.length}件の思い出` : '地図にカーソルを合わせると写真が出ます'}</span>
               </div>
               <div className="desktop-hover-photos">
                 {selectedPreviewPhotos.length ? (
-                  selectedPreviewPhotos.map((photo) => <img key={photo.id} src={photo.public_url ?? ''} alt={`${selected.name}の写真`} />)
+                  selectedPreviewPhotos.map((photo) => <img key={photo.id} src={photo.public_url ?? ''} alt={`${desktopPreviewPrefecture?.name ?? '旅'}の写真`} />)
                 ) : (
-                  <p>写真はまだありません</p>
+                  <p>{desktopPreviewPrefecture ? '写真はまだありません' : '県を選ぶとアルバムを確認できます'}</p>
                 )}
               </div>
             </div>
@@ -616,7 +621,7 @@ export default function App() {
 
           <WishlistPanel
             selected={selectedPrefecture}
-            items={selectedWishlistItems}
+            items={selectedPrefecture ? selectedWishlistItems : nextWishlistItems}
             form={wishlistForm}
             onFormChange={setWishlistForm}
             onSubmit={handleWishlistSubmit}

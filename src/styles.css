@@ -660,8 +660,8 @@ textarea:focus {
 
 .desktop-album-layout {
   display: grid;
-  grid-template-columns: 224px minmax(560px, 1fr) 330px;
-  gap: 18px;
+  grid-template-columns: 232px minmax(680px, 1fr) 356px;
+  gap: 22px;
   align-items: start;
 }
 
@@ -673,19 +673,19 @@ textarea:focus {
 
 .desktop-sidebar {
   position: sticky;
-  top: 18px;
-  min-height: calc(100vh - 36px);
+  top: 16px;
+  min-height: calc(100vh - 32px);
   display: grid;
   align-content: start;
   gap: 18px;
-  padding: 22px 14px;
+  padding: 24px 14px;
   border: 1px solid rgba(142, 103, 71, 0.16);
   border-radius: 8px;
   overflow: hidden;
   background:
     linear-gradient(180deg, rgba(255, 253, 248, 0.92), rgba(255, 244, 226, 0.86)),
     #fffaf2;
-  box-shadow: 0 20px 46px rgba(83, 55, 37, 0.08);
+  box-shadow: 0 24px 60px rgba(83, 55, 37, 0.1);
 }
 
 .desktop-brand {
@@ -755,7 +755,7 @@ textarea:focus {
 
 .desktop-map-stage {
   display: grid;
-  gap: 14px;
+  gap: 16px;
 }
 
 .desktop-greeting {
@@ -765,7 +765,7 @@ textarea:focus {
   gap: 18px;
   padding: 22px 26px;
   border: 1px solid rgba(142, 103, 71, 0.16);
-  border-radius: 8px;
+  border-radius: 10px;
   background: rgba(255, 253, 248, 0.88);
   box-shadow: 0 18px 44px rgba(83, 55, 37, 0.06);
 }
@@ -784,12 +784,16 @@ textarea:focus {
   position: relative;
   overflow: hidden;
   border: 1px solid rgba(142, 103, 71, 0.16);
-  border-radius: 8px;
+  min-height: min(76vh, 820px);
+  border-radius: 12px;
   background:
+    radial-gradient(circle at 78% 18%, rgba(167, 196, 160, 0.22), transparent 18%),
     radial-gradient(circle at 28% 20%, rgba(244, 162, 97, 0.1), transparent 24%),
+    linear-gradient(transparent 31px, rgba(180, 132, 90, 0.035) 32px),
     linear-gradient(135deg, rgba(255, 253, 248, 0.96), rgba(247, 252, 244, 0.9)),
     #fffdf8;
-  box-shadow: 0 20px 54px rgba(83, 55, 37, 0.08);
+  background-size: auto, auto, 32px 32px, auto, auto;
+  box-shadow: 0 28px 72px rgba(83, 55, 37, 0.1);
 }
 
 .desktop-map-card::before {
@@ -800,6 +804,25 @@ textarea:focus {
   width: 360px;
   border-top: 2px dashed rgba(180, 132, 90, 0.36);
   transform: rotate(-16deg);
+}
+
+.desktop-map-card::after {
+  content: "JOURNEY STAMP";
+  position: absolute;
+  right: 32px;
+  top: 34px;
+  z-index: 1;
+  width: 108px;
+  height: 108px;
+  border: 2px dashed rgba(231, 111, 81, 0.24);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: rgba(231, 111, 81, 0.38);
+  font-size: 0.66rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  transform: rotate(11deg);
 }
 
 .desktop-map-copy {
@@ -833,8 +856,8 @@ textarea:focus {
 }
 
 .desktop-map-card .japan-map {
-  max-height: min(72vh, 760px);
-  padding: 18px;
+  max-height: min(78vh, 840px);
+  padding: 28px 18px 20px;
 }
 
 .desktop-hover-card {
@@ -842,12 +865,13 @@ textarea:focus {
   left: 28px;
   bottom: 28px;
   z-index: 3;
-  width: 260px;
-  padding: 14px;
+  width: 288px;
+  padding: 16px;
   border: 1px solid rgba(142, 103, 71, 0.16);
-  border-radius: 8px;
+  border-radius: 10px;
   background: rgba(255, 253, 248, 0.92);
-  box-shadow: 0 16px 32px rgba(83, 55, 37, 0.13);
+  box-shadow: 0 18px 40px rgba(83, 55, 37, 0.16);
+  backdrop-filter: blur(12px);
 }
 
 .desktop-hover-card strong {
@@ -873,6 +897,8 @@ textarea:focus {
   aspect-ratio: 1;
   object-fit: cover;
   border-radius: 6px;
+  border: 3px solid #fff;
+  box-shadow: 0 6px 12px rgba(83, 55, 37, 0.12);
 }
 
 .desktop-hover-photos p {
@@ -884,16 +910,17 @@ textarea:focus {
 
 .desktop-album-panel {
   position: sticky;
-  top: 18px;
-  max-height: calc(100vh - 36px);
+  top: 16px;
+  max-height: calc(100vh - 32px);
   overflow: auto;
   display: grid;
-  gap: 12px;
+  gap: 14px;
   padding-right: 2px;
 }
 
 .desktop-panel-block {
-  padding: 14px;
+  padding: 16px;
+  border-radius: 10px;
 }
 
 .desktop-polaroid-list,
@@ -903,16 +930,22 @@ textarea:focus {
 }
 
 .desktop-polaroid {
-  border: 1px solid #ead8c5;
-  border-radius: 8px;
+  border: 1px solid rgba(234, 216, 197, 0.9);
+  border-radius: 10px;
   display: grid;
   grid-template-columns: 92px 1fr;
   gap: 12px;
   align-items: center;
-  padding: 10px;
-  background: #fffaf2;
+  padding: 12px;
+  background: linear-gradient(180deg, #fffdf8, #fff8ee);
   cursor: pointer;
   transform: rotate(-0.4deg);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.desktop-polaroid:hover {
+  box-shadow: 0 14px 28px rgba(83, 55, 37, 0.14);
+  transform: translateY(-2px) rotate(-0.4deg);
 }
 
 .desktop-polaroid:nth-child(2n) {
@@ -2462,21 +2495,18 @@ body {
 }
 
 @media (min-width: 901px) {
-  .desktop-album-layout,
   .mobile-bottom-nav,
-  .mobile-home-section {
+  .mobile-home-section,
+  .mobile-section {
     display: none;
   }
 
   .page-shell {
-    width: min(1180px, 100%);
+    width: min(1760px, 100%);
+    padding: 16px;
   }
 
   .page-shell > .app-header {
-    display: flex;
-  }
-
-  .mobile-section {
-    display: block;
+    display: none;
   }
 }
