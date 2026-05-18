@@ -1,5 +1,5 @@
 import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from 'react';
-import { Camera, ImagePlus, Loader2, LogOut, Plus, X } from 'lucide-react';
+import { Camera, Clock, ImagePlus, ListTodo, Loader2, LogOut, Map as MapIcon, Plus, X } from 'lucide-react';
 import type { Session } from '@supabase/supabase-js';
 import { AuthScreen } from './components/AuthScreen';
 import { BadgePanel } from './components/BadgePanel';
@@ -60,6 +60,7 @@ export default function App() {
   const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([]);
   const [selected, setSelected] = useState<Prefecture>(PREFECTURES[0]);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [activeMobileView, setActiveMobileView] = useState<'map' | 'plan' | 'timeline'>('map');
   const [editingVisit, setEditingVisit] = useState<PrefectureVisit | null>(null);
   const [form, setForm] = useState<VisitFormState>(defaultForm);
   const [wishlistForm, setWishlistForm] = useState<WishlistFormState>(defaultWishlistForm);
@@ -148,6 +149,7 @@ export default function App() {
 
   function handlePrefectureSelect(prefecture: Prefecture) {
     setSelected(prefecture);
+    setActiveMobileView('timeline');
   }
 
   function openEditorForSelected() {
@@ -401,73 +403,94 @@ export default function App() {
 
       {message && <p className="notice">{message}</p>}
 
-      <StatsPanel visits={visits} />
-      <BadgePanel visits={visits} />
+      <nav className="mobile-view-tabs" aria-label="表示切り替え">
+        <button className={activeMobileView === 'map' ? 'is-active' : ''} onClick={() => setActiveMobileView('map')}>
+          <MapIcon size={18} />
+          地図
+        </button>
+        <button className={activeMobileView === 'plan' ? 'is-active' : ''} onClick={() => setActiveMobileView('plan')}>
+          <ListTodo size={18} />
+          計画
+        </button>
+        <button className={activeMobileView === 'timeline' ? 'is-active' : ''} onClick={() => setActiveMobileView('timeline')}>
+          <Clock size={18} />
+          思い出
+        </button>
+      </nav>
 
-      <section className="map-layout">
-        <aside className="prefecture-list panel" aria-label="都道府県一覧">
-          <div className="section-title">
-            <Plus size={18} />
-            <h2>都道府県一覧</h2>
-          </div>
-          <div className="prefecture-list-grid">
-            {PREFECTURES.map((prefecture) => {
-              const count = visitCounts.get(prefecture.id) ?? 0;
-              const isSelected = selected.id === prefecture.id;
-              return (
-                <button
-                  key={prefecture.id}
-                  className={`prefecture-list-button ${isSelected ? 'is-selected' : ''} ${count > 0 ? 'is-visited' : ''}`}
-                  onMouseEnter={() => previewPrefecture(prefecture)}
-                  onFocus={() => previewPrefecture(prefecture)}
-                  onClick={() => handlePrefectureSelect(prefecture)}
-                >
-                  <span>{prefecture.name}</span>
-                  {count > 0 && <strong>{count}</strong>}
-                </button>
-              );
-            })}
-          </div>
-        </aside>
-        <JapanMap selectedId={selected.id} visitCounts={visitCounts} onSelect={handlePrefectureSelect} />
-      </section>
+      <section className={`mobile-section ${activeMobileView === 'map' ? 'is-active' : ''}`}>
+        <StatsPanel visits={visits} />
+        <BadgePanel visits={visits} />
 
-      <section className="detail-grid">
-        <WishlistPanel
-          selected={selected}
-          items={selectedWishlistItems}
-          form={wishlistForm}
-          onFormChange={setWishlistForm}
-          onSubmit={handleWishlistSubmit}
-          onDelete={deleteWishlistItem}
-        />
-        <section className="panel selected-memory-panel">
-          <div className="section-title">
-            <Plus size={18} />
-            <h2>{selected.name}の記録</h2>
-          </div>
-          <p className="empty compact">
-            {selectedVisits.length > 0
-              ? `${selected.name}には${selectedVisits.length}件の思い出があります。下のタイムラインで見返せます。`
-              : 'まだ記録がありません。まず県を選び、下のボタンから思い出を追加できます。'}
-          </p>
-          <button className="primary-button add-memory-button" onClick={openEditorForSelected}>
-            <Plus size={18} />
-            {selected.name}の記録を追加
-          </button>
+        <section className="map-layout">
+          <aside className="prefecture-list panel" aria-label="都道府県一覧">
+            <div className="section-title">
+              <MapIcon size={18} />
+              <h2>都道府県一覧</h2>
+            </div>
+            <div className="prefecture-list-grid">
+              {PREFECTURES.map((prefecture) => {
+                const count = visitCounts.get(prefecture.id) ?? 0;
+                const isSelected = selected.id === prefecture.id;
+                return (
+                  <button
+                    key={prefecture.id}
+                    className={`prefecture-list-button ${isSelected ? 'is-selected' : ''} ${count > 0 ? 'is-visited' : ''}`}
+                    onMouseEnter={() => previewPrefecture(prefecture)}
+                    onFocus={() => previewPrefecture(prefecture)}
+                    onClick={() => handlePrefectureSelect(prefecture)}
+                  >
+                    <span>{prefecture.name}</span>
+                    {count > 0 && <strong>{count}</strong>}
+                  </button>
+                );
+              })}
+            </div>
+          </aside>
+          <JapanMap selectedId={selected.id} visitCounts={visitCounts} onSelect={handlePrefectureSelect} />
         </section>
       </section>
 
-      <TimelinePanel
-        visits={visits}
-        selected={selected}
-        currentUserId={session.user.id}
-        profiles={profiles}
-        onEditVisit={editVisit}
-        onDeleteVisit={deleteVisit}
-        onSaveComment={saveComment}
-        onDeleteComment={deleteComment}
-      />
+      <section className={`mobile-section ${activeMobileView === 'plan' ? 'is-active' : ''}`}>
+        <section className="detail-grid">
+          <WishlistPanel
+            selected={selected}
+            items={selectedWishlistItems}
+            form={wishlistForm}
+            onFormChange={setWishlistForm}
+            onSubmit={handleWishlistSubmit}
+            onDelete={deleteWishlistItem}
+          />
+          <section className="panel selected-memory-panel">
+            <div className="section-title">
+              <Plus size={18} />
+              <h2>{selected.name}の記録</h2>
+            </div>
+            <p className="empty compact">
+              {selectedVisits.length > 0
+                ? `${selected.name}には${selectedVisits.length}件の思い出があります。思い出タブで見返せます。`
+                : 'まだ記録がありません。まず県を選び、下のボタンから思い出を追加できます。'}
+            </p>
+            <button className="primary-button add-memory-button" onClick={openEditorForSelected}>
+              <Plus size={18} />
+              {selected.name}の記録を追加
+            </button>
+          </section>
+        </section>
+      </section>
+
+      <section className={`mobile-section ${activeMobileView === 'timeline' ? 'is-active' : ''}`}>
+        <TimelinePanel
+          visits={visits}
+          selected={selected}
+          currentUserId={session.user.id}
+          profiles={profiles}
+          onEditVisit={editVisit}
+          onDeleteVisit={deleteVisit}
+          onSaveComment={saveComment}
+          onDeleteComment={deleteComment}
+        />
+      </section>
 
       {isEditorOpen && (
         <div className="editor-backdrop" role="dialog" aria-modal="true" aria-label={`${selected.name}の旅行記録`}>

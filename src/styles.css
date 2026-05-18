@@ -218,15 +218,64 @@ textarea:focus {
 }
 
 .app-header {
+  position: relative;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   gap: 16px;
-  padding: 18px 0;
+  margin-bottom: 14px;
+  padding: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(142, 103, 71, 0.16);
+  border-radius: 8px;
+  background:
+    linear-gradient(110deg, rgba(255, 250, 242, 0.96), rgba(238, 247, 235, 0.9)),
+    #fffaf2;
+  box-shadow: 0 18px 46px rgba(83, 55, 37, 0.08);
+}
+
+.app-header::before {
+  content: "JOURNEY LOG";
+  position: absolute;
+  right: 82px;
+  top: 18px;
+  color: rgba(231, 111, 81, 0.18);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+}
+
+.app-header::after {
+  content: "";
+  position: absolute;
+  right: -34px;
+  bottom: 18px;
+  width: 210px;
+  border-top: 2px dashed rgba(167, 196, 160, 0.64);
+  transform: rotate(-12deg);
+}
+
+.app-header > * {
+  position: relative;
+  z-index: 1;
 }
 
 .app-header h1 {
   font-size: clamp(1.8rem, 8vw, 3rem);
+}
+
+.app-header p {
+  margin-bottom: 0;
+  color: #735c4a;
+  font-weight: 700;
+}
+
+.mobile-view-tabs {
+  display: none;
+}
+
+.mobile-section {
+  display: block;
 }
 
 .stats-grid {
@@ -385,6 +434,7 @@ textarea:focus {
   padding: 12px;
   overflow: hidden;
   background:
+    radial-gradient(circle at 18% 20%, rgba(244, 162, 97, 0.12), transparent 24%),
     linear-gradient(180deg, rgba(255, 253, 248, 0.96), rgba(247, 252, 244, 0.92)),
     #fffdf8;
 }
@@ -657,7 +707,19 @@ textarea:focus {
 }
 
 .visit-card {
+  position: relative;
   padding: 14px;
+  overflow: hidden;
+}
+
+.visit-card::before {
+  content: "";
+  position: absolute;
+  inset: 8px auto 8px 8px;
+  width: 3px;
+  border-radius: 999px;
+  background: linear-gradient(#e76f51, #a7c4a0);
+  opacity: 0.55;
 }
 
 .visit-card-head {
@@ -846,6 +908,68 @@ time {
 }
 
 @media (max-width: 900px) {
+  .page-shell {
+    padding-bottom: 92px;
+  }
+
+  .app-header {
+    margin: 0 0 12px;
+  }
+
+  .app-header::before {
+    right: 64px;
+    top: 14px;
+    font-size: 0.68rem;
+  }
+
+  .app-header h1 {
+    font-size: 2.1rem;
+  }
+
+  .mobile-view-tabs {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin: 0 0 12px;
+    padding: 6px;
+    border: 1px solid rgba(142, 103, 71, 0.16);
+    border-radius: 8px;
+    background: rgba(255, 250, 242, 0.94);
+    box-shadow: 0 12px 26px rgba(83, 55, 37, 0.08);
+    backdrop-filter: blur(10px);
+  }
+
+  .mobile-view-tabs button {
+    min-height: 44px;
+    border: 0;
+    border-radius: 7px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    color: #735c4a;
+    background: transparent;
+    font-size: 0.92rem;
+    font-weight: 900;
+  }
+
+  .mobile-view-tabs button.is-active {
+    color: #fff;
+    background: #e76f51;
+    box-shadow: 0 8px 16px rgba(231, 111, 81, 0.18);
+  }
+
+  .mobile-section {
+    display: none;
+  }
+
+  .mobile-section.is-active {
+    display: block;
+  }
+
   .stats-grid,
   .main-layout,
   .map-layout,
@@ -860,6 +984,7 @@ time {
   .prefecture-list {
     position: static;
     max-height: none;
+    margin-bottom: 10px;
   }
 
   .prefecture-list-grid {
@@ -891,6 +1016,7 @@ time {
 @media (max-width: 540px) {
   .page-shell {
     padding: 12px;
+    padding-bottom: 86px;
   }
 
   .auth-card,
@@ -904,7 +1030,18 @@ time {
   }
 
   .stat-card {
-    min-height: 112px;
+    min-height: 96px;
+    padding: 14px;
+  }
+
+  .stat-card strong {
+    font-size: 1.55rem;
+  }
+
+  .badge-panel,
+  .wishlist-panel,
+  .selected-memory-panel {
+    margin-bottom: 12px;
   }
 
   .region-row {
@@ -929,7 +1066,7 @@ time {
 
   .japan-map {
     aspect-ratio: 438 / 548;
-    max-height: 62vh;
+    max-height: 58vh;
   }
 
   .map-card {
