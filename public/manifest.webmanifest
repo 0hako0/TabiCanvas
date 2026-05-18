@@ -1,22 +1,22 @@
 {
   "name": "TabiCanvas",
   "short_name": "TabiCanvas",
-  "description": "夫婦で47都道府県制覇を記録する旅行アルバム",
+  "description": "47都道府県の旅の思い出を、日本地図と写真で残せる旅行アルバムアプリ",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#fff7ed",
   "theme_color": "#f4a261",
   "icons": [
     {
-      "src": "/icons/icon-192.svg",
+      "src": "/icons/icon-192.png",
       "sizes": "192x192",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/icons/icon-512.svg",
+      "src": "/icons/icon-512.png",
       "sizes": "512x512",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ]
