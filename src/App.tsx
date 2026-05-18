@@ -11,6 +11,7 @@ import {
   LogOut,
   Map as MapIcon,
   Plus,
+  Search,
   Settings,
   Trophy,
   X,
@@ -75,6 +76,7 @@ export default function App() {
   const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([]);
   const [selected, setSelected] = useState<Prefecture>(PREFECTURES[0]);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [isPrefecturePickerOpen, setIsPrefecturePickerOpen] = useState(false);
   const [activeMobileView, setActiveMobileView] = useState<'home' | 'map' | 'plan' | 'timeline'>('home');
   const [isMapSheetOpen, setIsMapSheetOpen] = useState(false);
   const [mapFilter, setMapFilter] = useState<'all' | 'visited' | 'unvisited' | 'wishlist'>('all');
@@ -82,6 +84,7 @@ export default function App() {
   const [form, setForm] = useState<VisitFormState>(defaultForm);
   const [wishlistForm, setWishlistForm] = useState<WishlistFormState>(defaultWishlistForm);
   const [files, setFiles] = useState<FileList | null>(null);
+  const [prefectureSearch, setPrefectureSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
@@ -181,6 +184,11 @@ export default function App() {
     if (mapFilter === 'wishlist') return wishlistIds;
     return undefined;
   }, [mapFilter, visitedIds, wishlistIds]);
+  const prefecturesForPicker = useMemo(() => {
+    const keyword = prefectureSearch.trim().toLowerCase();
+    if (!keyword) return PREFECTURES;
+    return PREFECTURES.filter((prefecture) => prefecture.name.toLowerCase().includes(keyword) || prefecture.region.toLowerCase().includes(keyword));
+  }, [prefectureSearch]);
 
   function handlePrefectureSelect(prefecture: Prefecture) {
     setSelected(prefecture);
@@ -190,6 +198,7 @@ export default function App() {
   function openEditorForSelected() {
     resetMobileZoom();
     setIsMapSheetOpen(false);
+    setIsPrefecturePickerOpen(false);
     setEditingVisit(null);
     setForm(defaultForm);
     setFiles(null);
@@ -200,6 +209,7 @@ export default function App() {
     resetMobileZoom();
     setSelected(prefecture);
     setIsMapSheetOpen(false);
+    setIsPrefecturePickerOpen(false);
     setEditingVisit(null);
     setForm(defaultForm);
     setFiles(null);
@@ -208,7 +218,19 @@ export default function App() {
 
   function goToMobileView(view: 'home' | 'map' | 'plan' | 'timeline') {
     if (view !== 'map') setIsMapSheetOpen(false);
+    setIsPrefecturePickerOpen(false);
     setActiveMobileView(view);
+  }
+
+  function openPrefecturePicker() {
+    resetMobileZoom();
+    setIsMapSheetOpen(false);
+    setPrefectureSearch('');
+    setIsPrefecturePickerOpen(true);
+  }
+
+  function choosePrefectureForNewVisit(prefecture: Prefecture) {
+    openEditorForPrefecture(prefecture);
   }
 
   function goToMapView() {
@@ -514,9 +536,9 @@ export default function App() {
               <h2>こんにちは、{profile.nickname}さん</h2>
               <p>地図をなぞるように、旅の記録を振り返りましょう。</p>
             </div>
-            <button className="primary-button" onClick={openEditorForSelected}>
+            <button className="primary-button" onClick={openPrefecturePicker}>
               <Plus size={18} />
-              {selected.name}を記録
+              思い出を追加
             </button>
           </div>
 
@@ -655,7 +677,7 @@ export default function App() {
             <strong>思い出を記録して地図をカラフルにしていこう</strong>
             <p>{selected.name}を選択中です。</p>
           </div>
-          <button className="primary-button" onClick={openEditorForSelected}>
+          <button className="primary-button" onClick={openPrefecturePicker}>
             <Plus size={18} />
             追加
           </button>
@@ -666,7 +688,7 @@ export default function App() {
             <MapIcon size={18} />
             地図で見る
           </button>
-          <button className="primary-button" onClick={openEditorForSelected}>
+          <button className="primary-button" onClick={openPrefecturePicker}>
             <Plus size={18} />
             思い出を追加
           </button>
@@ -909,7 +931,7 @@ export default function App() {
           <MapIcon size={20} />
           <span>地図</span>
         </button>
-        <button className="mobile-add-button" aria-label="記録を追加" onClick={openEditorForSelected}>
+        <button className="mobile-add-button" aria-label="記録を追加" onClick={openPrefecturePicker}>
           <Plus size={30} />
         </button>
         <button className={activeMobileView === 'plan' ? 'is-active' : ''} onClick={() => goToMobileView('plan')}>
@@ -921,6 +943,71 @@ export default function App() {
           <span>思い出</span>
         </button>
       </nav>
+
+      {isPrefecturePickerOpen && (
+        <div className="picker-backdrop" role="dialog" aria-modal="true" aria-label="都道府県を選択">
+          <section className="panel prefecture-picker">
+            <div className="picker-head">
+              <div>
+                <p className="eyebrow">New memory</p>
+                <h2>どの都道府県の思い出を追加しますか？</h2>
+              </div>
+              <button className="icon-button small" aria-label="閉じる" onClick={() => setIsPrefecturePickerOpen(false)}>
+                <X size={16} />
+              </button>
+            </div>
+
+            <label className="picker-search">
+              <Search size={18} />
+              <input
+                value={prefectureSearch}
+                onChange={(event) => setPrefectureSearch(event.target.value)}
+                placeholder="都道府県を検索"
+                autoFocus
+              />
+            </label>
+
+            <div className="picker-suggestion">
+              <span>選択中の県</span>
+              <button onClick={() => choosePrefectureForNewVisit(selected)}>
+                {selected.name}に追加
+                <small>
+                  {visitCounts.get(selected.id) ?? 0}回訪問 / {wishlistIds.has(selected.id) ? '行きたい県' : visitedIds.has(selected.id) ? '訪問済み' : '未訪問'}
+                </small>
+              </button>
+            </div>
+
+            <div className="picker-region-list">
+              {REGIONS.map((region) => {
+                const regionPrefs = prefecturesForPicker.filter((prefecture) => prefecture.region === region);
+                if (regionPrefs.length === 0) return null;
+                return (
+                  <section key={region}>
+                    <h3>{region}</h3>
+                    <div className="picker-pref-grid">
+                      {regionPrefs.map((prefecture) => {
+                        const count = visitCounts.get(prefecture.id) ?? 0;
+                        const isVisited = count > 0;
+                        const isWishlist = wishlistIds.has(prefecture.id);
+                        return (
+                          <button
+                            key={prefecture.id}
+                            className={`${selected.id === prefecture.id ? 'is-selected' : ''} ${isVisited ? 'is-visited' : ''}`}
+                            onClick={() => choosePrefectureForNewVisit(prefecture)}
+                          >
+                            <span>{prefecture.name}</span>
+                            <small>{isVisited ? `${count}回訪問` : '未訪問'}{isWishlist ? ' / 行きたい' : ''}</small>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </section>
+                );
+              })}
+            </div>
+          </section>
+        </div>
+      )}
 
       {isEditorOpen && (
         <div className="editor-backdrop" role="dialog" aria-modal="true" aria-label={`${selected.name}の旅行記録`}>

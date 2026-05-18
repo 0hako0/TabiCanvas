@@ -1315,6 +1315,121 @@ textarea:focus {
   backdrop-filter: blur(3px);
 }
 
+.picker-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 21;
+  display: grid;
+  align-items: end;
+  padding: 18px;
+  background: rgba(63, 53, 45, 0.22);
+  backdrop-filter: blur(3px);
+}
+
+.prefecture-picker {
+  width: min(100%, 760px);
+  max-height: min(86vh, 760px);
+  margin: 0 auto;
+  overflow: auto;
+  padding: 18px;
+}
+
+.picker-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.picker-head h2 {
+  line-height: 1.45;
+}
+
+.picker-search {
+  position: relative;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.picker-search svg {
+  position: absolute;
+  left: 13px;
+  top: 50%;
+  color: #9d8776;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.picker-search input {
+  padding-left: 42px;
+}
+
+.picker-suggestion {
+  display: grid;
+  gap: 7px;
+  margin-bottom: 14px;
+}
+
+.picker-suggestion > span {
+  color: #806b5b;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.picker-suggestion button,
+.picker-pref-grid button {
+  min-height: 52px;
+  border: 1px solid #ead8c5;
+  border-radius: 8px;
+  display: grid;
+  justify-items: start;
+  gap: 3px;
+  padding: 9px 11px;
+  color: #4b4138;
+  background: #fffaf2;
+  font-weight: 850;
+}
+
+.picker-suggestion button {
+  border-color: #e76f51;
+  background: #fff1e6;
+}
+
+.picker-suggestion small,
+.picker-pref-grid small {
+  color: #806b5b;
+  font-size: 0.73rem;
+  font-weight: 800;
+}
+
+.picker-region-list {
+  display: grid;
+  gap: 14px;
+}
+
+.picker-region-list h3 {
+  margin-bottom: 8px;
+  color: #5d7658;
+  font-size: 0.88rem;
+}
+
+.picker-pref-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.picker-pref-grid button.is-visited {
+  border-color: #a7c4a0;
+  background: #eef7ec;
+}
+
+.picker-pref-grid button.is-selected {
+  border-color: #e76f51;
+  box-shadow: 0 0 0 3px rgba(231, 111, 81, 0.12);
+}
+
 .editor-panel {
   width: min(100%, 720px);
   max-height: min(88vh, 760px);
@@ -2231,6 +2346,22 @@ time {
 
   .editor-backdrop {
     padding: 8px;
+  }
+
+  .picker-backdrop {
+    align-items: end;
+    padding: 8px;
+    padding-bottom: calc(8px + env(safe-area-inset-bottom));
+  }
+
+  .prefecture-picker {
+    max-height: 82vh;
+    border-radius: 8px 8px 0 0;
+    padding: 16px;
+  }
+
+  .picker-pref-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .editor-panel {
