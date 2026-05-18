@@ -13,6 +13,8 @@ type Props = {
   visitCounts: Map<number, number>;
   onSelect: (prefecture: Prefecture) => void;
   onPreview?: (prefecture: Prefecture) => void;
+  highlightedIds?: Set<number>;
+  wishlistIds?: Set<number>;
 };
 
 const SVG_ID_TO_PREFECTURE_ID: Record<string, number> = {
@@ -67,7 +69,7 @@ const SVG_ID_TO_PREFECTURE_ID: Record<string, number> = {
 
 const PREFECTURE_BY_ID = new Map(PREFECTURES.map((prefecture) => [prefecture.id, prefecture]));
 
-export function JapanMap({ selectedId, visitCounts, onSelect, onPreview }: Props) {
+export function JapanMap({ selectedId, visitCounts, onSelect, onPreview, highlightedIds, wishlistIds }: Props) {
   return (
     <div className="map-card" aria-label="日本地図">
       <div className="map-toolbar">
@@ -95,6 +97,8 @@ export function JapanMap({ selectedId, visitCounts, onSelect, onPreview }: Props
           if (!prefecture) return null;
           const count = visitCounts.get(prefecture.id) ?? 0;
           const isSelected = selectedId === prefecture.id;
+          const isMuted = highlightedIds ? !highlightedIds.has(prefecture.id) : false;
+          const isWishlist = wishlistIds?.has(prefecture.id) ?? false;
 
           return (
             <path
@@ -102,7 +106,7 @@ export function JapanMap({ selectedId, visitCounts, onSelect, onPreview }: Props
               d={location.path}
               role="button"
               tabIndex={0}
-              className={`prefecture-path visit-${Math.min(count, 4)} ${isSelected ? 'is-selected' : ''}`}
+              className={`prefecture-path visit-${Math.min(count, 4)} ${isSelected ? 'is-selected' : ''} ${isMuted ? 'is-muted' : ''} ${isWishlist ? 'is-wishlist' : ''}`}
               aria-label={`${prefecture.name} ${count}回訪問`}
               onMouseEnter={() => onPreview?.(prefecture)}
               onFocus={() => onPreview?.(prefecture)}

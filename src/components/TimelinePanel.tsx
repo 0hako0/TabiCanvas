@@ -1,4 +1,4 @@
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { Clock, MessageCircle, Pencil, Trash2 } from 'lucide-react';
 import { PREFECTURES } from '../data/prefectures';
 import type { Prefecture, PrefectureVisit, Profile, VisitComment } from '../types';
@@ -25,6 +25,9 @@ export function TimelinePanel({
   onDeleteComment,
 }: Props) {
   const [scope, setScope] = useState<'selected' | 'all'>('selected');
+  useEffect(() => {
+    setScope('selected');
+  }, [selected.id]);
   const scopedVisits = scope === 'selected' ? visits.filter((visit) => visit.prefecture_id === selected.id) : visits;
   const recentVisits = scopedVisits.slice(0, 12);
 

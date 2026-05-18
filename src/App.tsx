@@ -23,7 +23,7 @@ import { JapanMap } from './components/JapanMap';
 import { StatsPanel } from './components/StatsPanel';
 import { TimelinePanel } from './components/TimelinePanel';
 import { WishlistPanel } from './components/WishlistPanel';
-import { PREFECTURES } from './data/prefectures';
+import { PREFECTURES, REGIONS } from './data/prefectures';
 import { resizeImage } from './lib/image';
 import { isSupabaseConfigured, supabase } from './lib/supabase';
 import type {
@@ -76,6 +76,8 @@ export default function App() {
   const [selected, setSelected] = useState<Prefecture>(PREFECTURES[0]);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [activeMobileView, setActiveMobileView] = useState<'home' | 'map' | 'plan' | 'timeline'>('home');
+  const [isMapSheetOpen, setIsMapSheetOpen] = useState(false);
+  const [mapFilter, setMapFilter] = useState<'all' | 'visited' | 'unvisited' | 'wishlist'>('all');
   const [editingVisit, setEditingVisit] = useState<PrefectureVisit | null>(null);
   const [form, setForm] = useState<VisitFormState>(defaultForm);
   const [wishlistForm, setWishlistForm] = useState<WishlistFormState>(defaultWishlistForm);
@@ -162,6 +164,7 @@ export default function App() {
   const selectedVisits = visits.filter((visit) => visit.prefecture_id === selected.id);
   const selectedWishlistItems = wishlistItems.filter((item) => item.prefecture_id === selected.id);
   const visitedIds = useMemo(() => new Set(visits.map((visit) => visit.prefecture_id)), [visits]);
+  const wishlistIds = useMemo(() => new Set(wishlistItems.map((item) => item.prefecture_id)), [wishlistItems]);
   const completionRate = Math.round((visitedIds.size / 47) * 100);
   const topPrefecture = useMemo(() => {
     const top = [...visitCounts.entries()].sort((a, b) => b[1] - a[1])[0];
@@ -169,14 +172,24 @@ export default function App() {
   }, [visitCounts]);
   const recentVisits = visits.slice(0, 5);
   const selectedPreviewPhotos = selectedVisits.flatMap((visit) => visit.photos ?? []).slice(0, 4);
+  const selectedPhotoCount = selectedVisits.reduce((total, visit) => total + (visit.photos?.length ?? 0), 0);
+  const latestSelectedVisit = selectedVisits[0];
+  const nextWishlistItems = wishlistItems.slice(0, 3);
+  const filteredPrefectureIds = useMemo(() => {
+    if (mapFilter === 'visited') return visitedIds;
+    if (mapFilter === 'unvisited') return new Set(PREFECTURES.filter((prefecture) => !visitedIds.has(prefecture.id)).map((prefecture) => prefecture.id));
+    if (mapFilter === 'wishlist') return wishlistIds;
+    return undefined;
+  }, [mapFilter, visitedIds, wishlistIds]);
 
   function handlePrefectureSelect(prefecture: Prefecture) {
     setSelected(prefecture);
-    setActiveMobileView('timeline');
+    setIsMapSheetOpen(true);
   }
 
   function openEditorForSelected() {
     resetMobileZoom();
+    setIsMapSheetOpen(false);
     setEditingVisit(null);
     setForm(defaultForm);
     setFiles(null);
@@ -186,6 +199,7 @@ export default function App() {
   function openEditorForPrefecture(prefecture: Prefecture) {
     resetMobileZoom();
     setSelected(prefecture);
+    setIsMapSheetOpen(false);
     setEditingVisit(null);
     setForm(defaultForm);
     setFiles(null);
@@ -193,7 +207,23 @@ export default function App() {
   }
 
   function goToMobileView(view: 'home' | 'map' | 'plan' | 'timeline') {
+    if (view !== 'map') setIsMapSheetOpen(false);
     setActiveMobileView(view);
+  }
+
+  function goToMapView() {
+    setActiveMobileView('map');
+    setIsMapSheetOpen(false);
+  }
+
+  function viewSelectedMemories() {
+    setActiveMobileView('timeline');
+    setIsMapSheetOpen(false);
+  }
+
+  function planForSelectedPrefecture() {
+    setActiveMobileView('plan');
+    setIsMapSheetOpen(false);
   }
 
   function previewPrefecture(prefecture: Prefecture) {
@@ -611,7 +641,7 @@ export default function App() {
           </div>
         </section>
 
-        <section className="mobile-map-preview panel">
+        <section className="mobile-map-preview panel" hidden>
           <div className="section-title">
             <MapIcon size={18} />
             <h2>47都道府県マップ</h2>
@@ -619,7 +649,7 @@ export default function App() {
           <JapanMap selectedId={selected.id} visitCounts={visitCounts} onSelect={handlePrefectureSelect} />
         </section>
 
-        <section className="mobile-memory-cta panel">
+        <section className="mobile-memory-cta panel" hidden>
           <Camera size={28} />
           <div>
             <strong>思い出を記録して地図をカラフルにしていこう</strong>
@@ -629,6 +659,89 @@ export default function App() {
             <Plus size={18} />
             追加
           </button>
+        </section>
+
+        <section className="mobile-dashboard-actions">
+          <button className="secondary-button" onClick={goToMapView}>
+            <MapIcon size={18} />
+            地図で見る
+          </button>
+          <button className="primary-button" onClick={openEditorForSelected}>
+            <Plus size={18} />
+            思い出を追加
+          </button>
+        </section>
+
+        <section className="panel mobile-dashboard-card">
+          <div className="section-title">
+            <Clock size={18} />
+            <h2>最近の思い出</h2>
+          </div>
+          {recentVisits.length ? (
+            <div className="mobile-dashboard-list">
+              {recentVisits.slice(0, 3).map((visit) => {
+                const pref = PREFECTURES.find((item) => item.id === visit.prefecture_id);
+                return (
+                  <button key={visit.id} onClick={() => editVisit(visit)}>
+                    <span>{visit.visited_on}</span>
+                    <strong>{pref?.name}・{visit.place_name}</strong>
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="empty compact">まだ思い出がありません。</p>
+          )}
+        </section>
+
+        <section className="panel mobile-dashboard-card">
+          <div className="section-title">
+            <ListTodo size={18} />
+            <h2>次に行きたい場所</h2>
+          </div>
+          {nextWishlistItems.length ? (
+            <div className="mobile-dashboard-list">
+              {nextWishlistItems.map((item) => {
+                const pref = PREFECTURES.find((prefecture) => prefecture.id === item.prefecture_id);
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      if (pref) setSelected(pref);
+                      setActiveMobileView('plan');
+                    }}
+                  >
+                    <span>{pref?.name}</span>
+                    <strong>{item.title}</strong>
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="empty compact">行きたい場所はまだありません。</p>
+          )}
+        </section>
+
+        <section className="panel mobile-dashboard-card">
+          <div className="section-title">
+            <Trophy size={18} />
+            <h2>地方別進捗</h2>
+          </div>
+          <div className="mobile-region-summary">
+            {REGIONS.map((region) => {
+              const regionPrefs = PREFECTURES.filter((prefecture) => prefecture.region === region);
+              const done = regionPrefs.filter((prefecture) => visitedIds.has(prefecture.id)).length;
+              return (
+                <div key={region}>
+                  <span>{region}</span>
+                  <div className="mini-track">
+                    <div style={{ width: `${(done / regionPrefs.length) * 100}%` }} />
+                  </div>
+                  <small>{done}/{regionPrefs.length}</small>
+                </div>
+              );
+            })}
+          </div>
         </section>
       </section>
 
@@ -647,9 +760,34 @@ export default function App() {
         </button>
       </nav>
 
-      <section className={`mobile-section ${activeMobileView === 'map' ? 'is-active' : ''}`}>
+      <section className={`mobile-section mobile-map-section ${activeMobileView === 'map' ? 'is-active' : ''}`}>
         <StatsPanel visits={visits} />
         <BadgePanel visits={visits} />
+
+        <section className="panel map-control-panel">
+          <div className="map-filter-row" aria-label="地図フィルター">
+            {[
+              ['all', 'すべて'],
+              ['visited', '行った県'],
+              ['unvisited', '未制覇'],
+              ['wishlist', '行きたい県'],
+            ].map(([value, label]) => (
+              <button
+                key={value}
+                className={mapFilter === value ? 'is-active' : ''}
+                onClick={() => setMapFilter(value as 'all' | 'visited' | 'unvisited' | 'wishlist')}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <div className="map-detail-legend" aria-label="地図の凡例">
+            <span><i className="legend-swatch visit-0" />未訪問</span>
+            <span><i className="legend-swatch visit-1" />訪問済み</span>
+            <span><i className="legend-swatch visit-4" />複数回訪問</span>
+            <span><i className="legend-swatch wishlist" />行きたい県</span>
+          </div>
+        </section>
 
         <section className="map-layout">
           <aside className="prefecture-list panel" aria-label="都道府県一覧">
@@ -676,9 +814,50 @@ export default function App() {
               })}
             </div>
           </aside>
-          <JapanMap selectedId={selected.id} visitCounts={visitCounts} onSelect={handlePrefectureSelect} />
+          <JapanMap
+            selectedId={selected.id}
+            visitCounts={visitCounts}
+            highlightedIds={filteredPrefectureIds}
+            wishlistIds={wishlistIds}
+            onSelect={handlePrefectureSelect}
+          />
         </section>
       </section>
+
+      {activeMobileView === 'map' && isMapSheetOpen && (
+        <section className="map-bottom-sheet" aria-label={`${selected.name}の概要`}>
+          <div className="sheet-handle" />
+          <div className="map-sheet-head">
+            <div>
+              <p className="eyebrow">Selected prefecture</p>
+              <h2>{selected.name}</h2>
+            </div>
+            <button className="icon-button small" aria-label="閉じる" onClick={() => setIsMapSheetOpen(false)}>
+              <X size={16} />
+            </button>
+          </div>
+          <div className="map-sheet-stats">
+            <span>訪問 {visitCounts.get(selected.id) ?? 0}回</span>
+            <span>写真 {selectedPhotoCount}枚</span>
+          </div>
+          <p className="empty compact">
+            {latestSelectedVisit
+              ? `最新の思い出: ${latestSelectedVisit.place_name} (${latestSelectedVisit.visited_on})`
+              : 'この県の思い出はまだありません。'}
+          </p>
+          <div className="map-sheet-actions">
+            <button className="secondary-button" onClick={viewSelectedMemories}>
+              思い出を見る
+            </button>
+            <button className="primary-button" onClick={openEditorForSelected}>
+              思い出を追加
+            </button>
+            <button className="secondary-button" onClick={planForSelectedPrefecture}>
+              行きたい場所に追加
+            </button>
+          </div>
+        </section>
+      )}
 
       <section className={`mobile-section ${activeMobileView === 'plan' ? 'is-active' : ''}`}>
         <section className="detail-grid">
