@@ -375,8 +375,7 @@ export default function App() {
     <main className="page-shell">
       <header className="app-header">
         <div>
-          <p className="eyebrow">TabiCanvas</p>
-          <h1>{couple.name}</h1>
+          <h1>TabiCanvas</h1>
           <p>
             {profile.nickname}でログイン中 / 招待コード: <strong>{couple.invite_code}</strong>
           </p>

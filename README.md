@@ -90,6 +90,8 @@ VITE_SUPABASE_ANON_KEY=your-anon-key
 
 写真はprivate bucketに `travel-photos/{couple_id}/{visit_id}/{photo_id}.webp` の形式で保存します。画面表示時はSupabaseの署名付きURLを発行するため、夫婦メンバー以外は写真を直接閲覧できません。
 
+同じ招待コードで参加したメンバーだけが同じ `couple_id` に所属します。旅行記録、行きたい場所、コメント、写真メタ情報、Storage上の写真はすべてRLSで `couple_members` を確認しているため、別の招待コードで作られたアルバムや未参加ユーザーからは閲覧できません。
+
 ## 無料枠を超えにくくする工夫
 
 - 写真は元画像をそのまま保存せず、最大辺1440pxに縮小します。
