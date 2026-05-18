@@ -1,33 +1,14 @@
 # TabiCanvas
 
-夫婦で47都道府県制覇を目指すための旅行アルバムアプリです。日本地図で訪問済み都道府県を色付けし、日付、場所、メモ、タグ、写真をふたりだけで共有できます。
+47都道府県の旅の思い出を、日本地図と写真で残せる旅行アルバムアプリです。
 
-## 無料運用方針
+## 方針
 
-TabiCanvasは、できるだけ費用が発生しない構成を前提にしています。
-
-- フロントエンドはVercel無料枠でデプロイ
-- 独自バックエンドは作らず、Supabase無料枠を使用
-- Supabase Auth、Database、Storage、RLSで認証・保存・共有を完結
-- 写真はアップロード前にブラウザでリサイズ・圧縮
-- 保存形式はWebPを優先
-- 1枚あたり300KB〜800KB程度を目安に圧縮
-- Storage bucketはprivateにし、署名付きURLで表示
-- 無料枠を超えそうになっても、Supabaseの有料プランや別Storageへ移行しやすい構成
-
-## MVPでできること
-
-- Supabase Authでログイン、アカウント作成
-- 夫婦共有スペースの作成、招待コードで参加
-- 日本地図から都道府県をクリック
-- 訪問回数に応じて都道府県の色を濃く表示
-- 旅行記録の登録、削除
-- 複数写真アップロード、WebP圧縮
-- 47都道府県の制覇率、地方別達成率、旅行回数表示
-- 行きたい場所リスト
-- 制覇バッジ
-- 思い出タイムライン
-- PWAとしてホーム画面追加に対応
+- フロントエンドは Vercel 無料枠
+- バックエンドは作らず Supabase 無料枠
+- Supabase Auth / Database / Storage / RLS で共有と保護を実装
+- 写真はアップロード前にブラウザで WebP へリサイズ・圧縮
+- Storage は private bucket に保存し、画面表示時だけ署名付きURLを発行
 
 ## 技術構成
 
@@ -47,62 +28,102 @@ cp .env.example .env.local
 npm run dev
 ```
 
-`.env.local` にSupabaseの値を設定します。
+`.env.local` に Supabase の値を設定します。
 
 ```env
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key
 ```
 
-## Supabase設定
+## Supabase 設定
 
-1. Supabaseで新しいプロジェクトを作成します。
+1. Supabase で新しいプロジェクトを作成します。
 2. `SQL Editor` を開きます。
 3. [supabase/schema.sql](./supabase/schema.sql) の内容を貼り付けて実行します。
-4. `Authentication > Providers` でEmailログインを有効にします。
-5. 本番デプロイ後、`Authentication > URL Configuration` にVercelのURLを追加します。
+4. `Authentication > Providers` で Email を有効化します。
+5. 本番デプロイ後、`Authentication > URL Configuration` に Vercel の本番URLを追加します。
+6. ローカル開発用に `http://localhost:5173` も Redirect URL に追加します。
 
-## テーブル設計
+## Googleログイン設定
 
-- `couples`: 夫婦単位の共有アルバム
-- `couple_members`: 夫婦アルバムに参加しているユーザー
-- `prefecture_visits`: 都道府県ごとの旅行記録
-- `visit_locations`: 将来の複数スポット管理用
-- `photos`: Storageに保存した写真のメタ情報
-- `visit_comments`: 将来の夫婦コメント、リアクション、AI日記メモ用
-- `tags`: 将来のタグマスタ用
-- `wishlist`: 未制覇県の行きたい場所リスト
+### 1. Google Cloud Console 側
 
-夫婦共有は `couple_id` を中心に管理します。RLSでは `couple_members` に所属しているユーザーだけが、その夫婦のデータを読み書きできます。
+1. [Google Cloud Console](https://console.cloud.google.com/) を開きます。
+2. プロジェクトを作成、または既存プロジェクトを選択します。
+3. `API とサービス > OAuth 同意画面` を開きます。
+4. アプリ名、サポートメール、デベロッパー連絡先を入力して保存します。
+5. `API とサービス > 認証情報` を開きます。
+6. `認証情報を作成 > OAuth クライアント ID` を選びます。
+7. アプリケーションの種類は `ウェブ アプリケーション` を選びます。
+8. 承認済みの JavaScript 生成元に以下を追加します。
+   - `http://localhost:5173`
+   - Vercel の本番URL
+9. 承認済みのリダイレクト URI に、Supabase の Google callback URL を追加します。
+   - Supabase の `Authentication > Providers > Google` に表示される callback URL を使います。
+   - 形式は通常 `https://<project-ref>.supabase.co/auth/v1/callback` です。
+10. 作成後に表示される `Client ID` と `Client Secret` を控えます。
 
-## RLSとStorage
+### 2. Supabase 側
 
-[supabase/schema.sql](./supabase/schema.sql) には以下が含まれています。
+1. Supabase Dashboard で対象プロジェクトを開きます。
+2. `Authentication > Providers > Google` を開きます。
+3. Google Provider を有効化します。
+4. Google Cloud Console で作成した `Client ID` と `Client Secret` を入力します。
+5. 保存します。
+6. `Authentication > URL Configuration` で以下を設定します。
+   - Site URL: Vercel の本番URL
+   - Redirect URLs:
+     - `http://localhost:5173`
+     - Vercel の本番URL
 
-- 全テーブルのRLS有効化
-- 夫婦メンバー判定関数 `is_couple_member`
-- 夫婦作成RPC `create_couple`
-- 招待コード参加RPC `join_couple_by_invite_code`
-- 旅行記録、写真、タグ、WishlistのRLSポリシー
-- 将来の夫婦コメント用 `visit_comments` のRLSポリシー
-- `travel-photos` Storage bucket作成
-- 写真パス先頭の `couple_id` を使ったStorage RLS
+アプリ側では以下の形で `window.location.origin` に戻すため、ローカルと本番の両方に対応できます。
 
-写真はprivate bucketに `travel-photos/{couple_id}/{visit_id}/{photo_id}.webp` の形式で保存します。画面表示時はSupabaseの署名付きURLを発行するため、夫婦メンバー以外は写真を直接閲覧できません。
+```ts
+supabase.auth.signInWithOAuth({
+  provider: 'google',
+  options: {
+    redirectTo: window.location.origin,
+  },
+});
+```
 
-同じ招待コードで参加したメンバーだけが同じ `couple_id` に所属します。旅行記録、行きたい場所、コメント、写真メタ情報、Storage上の写真はすべてRLSで `couple_members` を確認しているため、別の招待コードで作られたアルバムや未参加ユーザーからは閲覧できません。
+既存のメールアドレスと同じGoogleアカウントでログインした場合、Supabase Auth 側で同一メールのアカウント連携として扱われる想定です。夫婦共有データは `auth.uid()` と `couple_members` を使ったRLSで保護しているため、Googleログイン後も同じユーザーIDで認証されれば既存データを利用できます。
 
-## 無料枠を超えにくくする工夫
+## 主な機能
 
-- 写真は元画像をそのまま保存せず、最大辺1440pxに縮小します。
-- WebP品質を段階的に調整し、800KB以下を目標にします。
-- 旅行記録本文やタグはDatabase、画像本体はStorageに分離します。
-- サムネイル専用ファイルはMVPでは作らず、保存枚数を増やしすぎない設計にしています。
-- 将来写真が増えた場合は、Storage bucketだけを別サービスに移す、またはSupabase Proへ移行できます。
+- ログイン / 新規登録
+- Googleログイン
+- 夫婦・家族・旅行仲間などの共有アルバム作成
+- 招待コードで同じアルバムへ参加
+- 日本地図で訪問済み都道府県を色分け
+- 都道府県ごとの旅行記録
+- 写真アップロード
+- 行きたい場所リスト
+- 制覇率、地方別進捗、訪問回数
+- 思い出タイムライン
+- PWA対応
 
-## Vercelデプロイ
+## データ設計
 
-VercelでGitHubリポジトリをImportします。
+- `couples`: 共有アルバム
+- `couple_members`: アルバム参加ユーザー
+- `profiles`: ニックネーム
+- `prefecture_visits`: 旅行記録
+- `visit_locations`: 訪問場所の拡張用
+- `photos`: 写真メタ情報
+- `visit_comments`: ユーザー別コメント
+- `tags`: タグ拡張用
+- `wishlist`: 行きたい場所
+
+## RLS と Storage
+
+[supabase/schema.sql](./supabase/schema.sql) にテーブル作成、RLS、RPC、Storage bucket 作成SQLをまとめています。
+
+写真は `travel-photos/{couple_id}/{visit_id}/{photo_id}.webp` に保存します。Storage bucket は private で、RLS により同じ共有アルバムのメンバーだけがアクセスできます。画面表示時は署名付きURLを発行します。
+
+## Vercel デプロイ
+
+Vercel で GitHub リポジトリを Import します。
 
 - Framework Preset: `Vite`
 - Build command: `npm run build`
@@ -111,28 +132,12 @@ VercelでGitHubリポジトリをImportします。
   - `VITE_SUPABASE_URL`
   - `VITE_SUPABASE_ANON_KEY`
 
-デプロイ後、Supabaseの `Authentication > URL Configuration` にVercelの本番URLを追加してください。
+デプロイ後、Supabase の `Authentication > URL Configuration` と Google Cloud Console の OAuth 設定に Vercel の本番URLを追加してください。
 
-## 起動・ビルド
+## 起動コマンド
 
 ```bash
 npm run dev
 npm run build
 npm run preview
 ```
-
-## 今後追加しやすい機能
-
-- 行きたい場所リストの画面化
-- SNS風タイムライン
-- AI旅行日記生成
-- 夫婦それぞれのコメント、リアクション
-- 写真から旅行ムービー生成
-- Google Map連携
-- Apple/Googleフォト連携
-- 旅行記念日、カレンダー表示
-- 旅行ランキング
-
-## 開発メモ
-
-MVP優先のため、画面構成は `src/App.tsx` を中心にシンプルにしています。初心者でも追いやすいよう、状態管理ライブラリやatomic designは使っていません。将来画面が増えたら、`components`、`lib`、`data` を少しずつ分割していく想定です。
