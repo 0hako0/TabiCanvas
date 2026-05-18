@@ -38,6 +38,18 @@ const defaultWishlistForm: WishlistFormState = {
   memo: '',
 };
 
+function resetMobileZoom() {
+  const viewport = document.querySelector<HTMLMetaElement>('meta[name="viewport"]');
+  if (!viewport) return;
+
+  viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0');
+  window.scrollTo({ top: window.scrollY, left: 0 });
+
+  window.setTimeout(() => {
+    viewport.setAttribute('content', 'width=device-width, initial-scale=1.0');
+  }, 250);
+}
+
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [couple, setCouple] = useState<Couple | null>(null);
@@ -139,6 +151,7 @@ export default function App() {
   }
 
   function openEditorForSelected() {
+    resetMobileZoom();
     setEditingVisit(null);
     setForm(defaultForm);
     setFiles(null);
@@ -195,6 +208,7 @@ export default function App() {
   }
 
   function editVisit(visit: PrefectureVisit) {
+    resetMobileZoom();
     const prefecture = PREFECTURES.find((item) => item.id === visit.prefecture_id);
     if (prefecture) setSelected(prefecture);
     setEditingVisit(visit);
