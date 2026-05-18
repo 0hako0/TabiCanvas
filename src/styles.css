@@ -649,10 +649,6 @@ textarea:focus {
   font-weight: 700;
 }
 
-.mobile-view-tabs {
-  display: none;
-}
-
 .mobile-section {
   display: none;
 }
@@ -1015,15 +1011,9 @@ textarea:focus {
 }
 
 .badge-panel,
-.wishlist-panel,
-.selected-memory-panel {
+.wishlist-panel {
   padding: 14px;
   margin-bottom: 16px;
-}
-
-.add-memory-button {
-  width: 100%;
-  margin-top: 12px;
 }
 
 .badge-grid {
@@ -1855,10 +1845,6 @@ time {
     line-height: 1.45;
   }
 
-  .mobile-view-tabs {
-    display: none;
-  }
-
   .mobile-section {
     display: none;
   }
@@ -1876,16 +1862,13 @@ time {
     gap: 12px;
   }
 
-  .mobile-summary-card,
-  .mobile-map-preview,
-  .mobile-memory-cta {
+  .mobile-summary-card {
     position: relative;
     overflow: hidden;
     padding: 14px;
   }
 
-  .mobile-summary-card::after,
-  .mobile-map-preview::after {
+  .mobile-summary-card::after {
     content: "";
     position: absolute;
     right: -24px;
@@ -2088,53 +2071,6 @@ time {
     margin-top: 10px;
   }
 
-  .mobile-map-preview .section-title {
-    margin-bottom: 8px;
-  }
-
-  .mobile-map-preview .map-card {
-    border: 0;
-    box-shadow: none;
-    background: transparent;
-  }
-
-  .mobile-map-preview .map-toolbar {
-    display: none;
-  }
-
-  .mobile-map-preview .japan-map {
-    max-height: 40vh;
-  }
-
-  .mobile-memory-cta {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .mobile-memory-cta > svg {
-    color: #a8704b;
-  }
-
-  .mobile-memory-cta strong {
-    display: block;
-    margin-bottom: 3px;
-    color: #4b4138;
-    font-size: 0.95rem;
-  }
-
-  .mobile-memory-cta p {
-    margin: 0;
-    color: #806b5b;
-    font-size: 0.82rem;
-  }
-
-  .mobile-memory-cta .primary-button {
-    min-width: 78px;
-    min-height: 42px;
-  }
-
   .mobile-bottom-nav {
     position: fixed;
     left: 10px;
@@ -2284,8 +2220,7 @@ time {
   }
 
   .badge-panel,
-  .wishlist-panel,
-  .selected-memory-panel {
+  .wishlist-panel {
     margin-bottom: 12px;
   }
 
@@ -2312,10 +2247,6 @@ time {
   .japan-map {
     aspect-ratio: 438 / 548;
     max-height: 58vh;
-  }
-
-  .mobile-map-preview .japan-map {
-    max-height: 34vh;
   }
 
   .mobile-bottom-nav {

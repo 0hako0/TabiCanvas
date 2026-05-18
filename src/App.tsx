@@ -676,26 +676,6 @@ export default function App() {
           </div>
         </section>
 
-        <section className="mobile-map-preview panel" hidden>
-          <div className="section-title">
-            <MapIcon size={18} />
-            <h2>47都道府県マップ</h2>
-          </div>
-          <JapanMap selectedId={selectedPrefecture?.id ?? null} visitCounts={visitCounts} onSelect={handlePrefectureSelect} />
-        </section>
-
-        <section className="mobile-memory-cta panel" hidden>
-          <Camera size={28} />
-          <div>
-            <strong>思い出を記録して地図をカラフルにしていこう</strong>
-            <p>{selected.name}を選択中です。</p>
-          </div>
-          <button className="primary-button" onClick={openPrefecturePicker}>
-            <Plus size={18} />
-            追加
-          </button>
-        </section>
-
         <section className="mobile-dashboard-actions">
           <button className="secondary-button" onClick={goToMapView}>
             <MapIcon size={18} />
@@ -779,21 +759,6 @@ export default function App() {
           </div>
         </section>
       </section>
-
-      <nav className="mobile-view-tabs" aria-label="表示切り替え">
-        <button className={activeMobileView === 'map' ? 'is-active' : ''} onClick={() => setActiveMobileView('map')}>
-          <MapIcon size={18} />
-          地図
-        </button>
-        <button className={activeMobileView === 'plan' ? 'is-active' : ''} onClick={() => setActiveMobileView('plan')}>
-          <ListTodo size={18} />
-          計画
-        </button>
-        <button className={activeMobileView === 'timeline' ? 'is-active' : ''} onClick={() => setActiveMobileView('timeline')}>
-          <Clock size={18} />
-          思い出
-        </button>
-      </nav>
 
       <section className={`mobile-section mobile-map-section ${activeMobileView === 'map' ? 'is-active' : ''}`}>
         <StatsPanel visits={visits} />
