@@ -1,7 +1,7 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { Clock, MessageCircle, Pencil, Trash2 } from 'lucide-react';
 import { PREFECTURES } from '../data/prefectures';
-import type { Prefecture, PrefectureVisit, Profile, VisitComment } from '../types';
+import type { Prefecture, PrefectureVisit, Profile } from '../types';
 
 type Props = {
   visits: PrefectureVisit[];
@@ -10,7 +10,7 @@ type Props = {
   profiles: Profile[];
   onEditVisit: (visit: PrefectureVisit) => void;
   onDeleteVisit: (visitId: string) => void;
-  onSaveComment: (visit: PrefectureVisit, body: string, existingComment?: VisitComment) => void;
+  onSaveComment: (visit: PrefectureVisit, body: string) => void;
   onDeleteComment: (commentId: string) => void;
 };
 
@@ -79,7 +79,7 @@ type CardProps = {
   profiles: Profile[];
   onEditVisit: (visit: PrefectureVisit) => void;
   onDeleteVisit: (visitId: string) => void;
-  onSaveComment: (visit: PrefectureVisit, body: string, existingComment?: VisitComment) => void;
+  onSaveComment: (visit: PrefectureVisit, body: string) => void;
   onDeleteComment: (commentId: string) => void;
 };
 
@@ -92,16 +92,18 @@ function TimelineCard({
   onSaveComment,
   onDeleteComment,
 }: CardProps) {
-  const myComment = visit.visit_comments?.find((comment) => comment.user_id === currentUserId);
-  const partnerComments = visit.visit_comments?.filter((comment) => comment.user_id !== currentUserId) ?? [];
-  const [commentBody, setCommentBody] = useState(myComment?.body ?? '');
+  const [commentBody, setCommentBody] = useState('');
   const prefectureName = PREFECTURES.find((prefecture) => prefecture.id === visit.prefecture_id)?.name;
   const profileById = new Map(profiles.map((profile) => [profile.user_id, profile]));
+  const comments = [...(visit.visit_comments ?? [])].sort(
+    (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+  );
 
   function handleCommentSubmit(event: FormEvent) {
     event.preventDefault();
     if (!commentBody.trim()) return;
-    onSaveComment(visit, commentBody.trim(), myComment);
+    onSaveComment(visit, commentBody.trim());
+    setCommentBody('');
   }
 
   return (
@@ -142,28 +144,42 @@ function TimelineCard({
           <MessageCircle size={16} />
           <strong>コメント</strong>
         </div>
-        {partnerComments.map((comment) => (
-          <div key={comment.id} className="comment-bubble partner">
-            <strong>{profileById.get(comment.user_id ?? '')?.nickname ?? 'パートナー'}</strong>
-            <p>{comment.body}</p>
-          </div>
-        ))}
-        {myComment && (
-          <div className="comment-bubble mine">
-            <strong>{profileById.get(currentUserId)?.nickname ?? '自分'}</strong>
-            <p>{myComment.body}</p>
-            <button className="text-button inline" onClick={() => onDeleteComment(myComment.id)}>
-              自分のコメントを削除
-            </button>
-          </div>
-        )}
+        {comments.map((comment) => {
+          const isMine = comment.user_id === currentUserId;
+          return (
+            <div key={comment.id} className={`comment-bubble ${isMine ? 'mine' : 'partner'}`}>
+              <strong>{profileById.get(comment.user_id ?? '')?.nickname ?? (isMine ? '自分' : 'メンバー')}</strong>
+              <p>{comment.body}</p>
+              <small>
+                {new Date(comment.created_at).toLocaleString('ja-JP', {
+                  month: 'numeric',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </small>
+              {isMine && (
+                <button
+                  type="button"
+                  className="text-button inline"
+                  onClick={() => {
+                    if (confirm('このコメントを削除しますか？')) onDeleteComment(comment.id);
+                  }}
+                >
+                  削除
+                </button>
+              )}
+            </div>
+          );
+        })}
         <form className="comment-form" onSubmit={handleCommentSubmit}>
-          <input
+          <textarea
             value={commentBody}
             onChange={(event) => setCommentBody(event.target.value)}
             placeholder="コメントを書く"
+            rows={2}
           />
-          <button className="secondary-button">{myComment ? '更新' : '保存'}</button>
+          <button className="secondary-button">送信</button>
         </form>
       </div>
     </article>

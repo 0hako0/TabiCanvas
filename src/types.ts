@@ -65,6 +65,7 @@ export type VisitFormState = {
   visited_on: string;
   place_name: string;
   memo: string;
+  comment: string;
   nights: number;
   tags: string;
 };

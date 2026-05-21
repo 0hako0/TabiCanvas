@@ -33,7 +33,6 @@ import type {
   PrefectureVisit,
   Profile,
   VisitFormState,
-  VisitComment,
   VisitPhoto,
   WishlistFormState,
   WishlistItem,
@@ -43,6 +42,7 @@ const defaultForm: VisitFormState = {
   visited_on: new Date().toISOString().slice(0, 10),
   place_name: '',
   memo: '',
+  comment: '',
   nights: 0,
   tags: '',
 };
@@ -307,6 +307,19 @@ export default function App() {
       await uploadPhotos(visit.id, files);
     }
 
+    if (form.comment.trim() && session) {
+      const { error: commentError } = await supabase.from('visit_comments').insert({
+        couple_id: couple.id,
+        visit_id: visit.id,
+        user_id: session.user.id,
+        comment_type: 'comment',
+        body: form.comment.trim(),
+      });
+      if (commentError) {
+        setMessage(commentError.message);
+      }
+    }
+
     setForm(defaultForm);
     setFiles(null);
     setEditingVisit(null);
@@ -324,6 +337,7 @@ export default function App() {
       visited_on: visit.visited_on,
       place_name: visit.place_name,
       memo: visit.memo ?? '',
+      comment: '',
       nights: visit.nights,
       tags: visit.tags.join(', '),
     });
@@ -426,7 +440,7 @@ export default function App() {
     await loadCoupleAndVisits();
   }
 
-  async function saveComment(visit: PrefectureVisit, body: string, existingComment?: VisitComment) {
+  async function saveComment(visit: PrefectureVisit, body: string) {
     if (!couple || !session) return;
     const payload = {
       couple_id: couple.id,
@@ -435,9 +449,7 @@ export default function App() {
       comment_type: 'comment',
       body,
     };
-    const { error } = existingComment
-      ? await supabase.from('visit_comments').update({ body }).eq('id', existingComment.id)
-      : await supabase.from('visit_comments').insert(payload);
+    const { error } = await supabase.from('visit_comments').insert(payload);
     if (error) {
       setMessage(error.message);
       return;
@@ -653,6 +665,7 @@ export default function App() {
       </section>
 
       <section className={`mobile-section mobile-home-section ${activeMobileView === 'home' ? 'is-active' : ''}`}>
+        <div className="mobile-home-page">
         <section className="panel mobile-dashboard-card mobile-memory-album">
           <div className="section-title">
             <Clock size={18} />
@@ -776,6 +789,7 @@ export default function App() {
             })}
           </div>
         </section>
+        </div>
       </section>
 
       <section className={`mobile-section mobile-map-section ${activeMobileView === 'map' ? 'is-active' : ''}`}>
@@ -1040,6 +1054,15 @@ export default function App() {
                   onChange={(event) => setForm({ ...form, memo: event.target.value })}
                   placeholder="食べたもの、景色、ふたりの会話など"
                   rows={4}
+                />
+              </label>
+              <label>
+                コメント
+                <textarea
+                  value={form.comment}
+                  onChange={(event) => setForm({ ...form, comment: event.target.value })}
+                  placeholder="この旅で話したこと、感じたことなど"
+                  rows={3}
                 />
               </label>
               <label>
