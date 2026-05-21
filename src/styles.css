@@ -649,6 +649,120 @@ textarea:focus {
   font-weight: 700;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.notification-button {
+  position: relative;
+}
+
+.notification-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  display: grid;
+  min-width: 19px;
+  height: 19px;
+  place-items: center;
+  border: 2px solid #fffaf3;
+  border-radius: 999px;
+  background: #e76f51;
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 900;
+}
+
+.notification-panel {
+  position: fixed;
+  top: 92px;
+  right: 22px;
+  z-index: 60;
+  width: min(380px, calc(100vw - 32px));
+  max-height: min(620px, calc(100vh - 120px));
+  overflow: auto;
+  border: 1px solid rgba(222, 204, 184, 0.9);
+  border-radius: 18px;
+  padding: 16px;
+  background:
+    radial-gradient(rgba(142, 103, 71, 0.045) 0.5px, transparent 0.5px),
+    linear-gradient(145deg, rgba(255, 253, 248, 0.98), rgba(255, 248, 238, 0.96));
+  background-size: 12px 12px, auto;
+  box-shadow: 0 22px 52px rgba(83, 55, 37, 0.18);
+}
+
+.notification-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.notification-panel-head h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.notification-list {
+  display: grid;
+  gap: 9px;
+}
+
+.notification-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  width: 100%;
+  border: 1px solid rgba(234, 216, 197, 0.75);
+  border-radius: 13px;
+  padding: 11px;
+  background: rgba(255, 255, 255, 0.58);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.notification-item:hover {
+  transform: translateY(-1px);
+  border-color: rgba(231, 111, 81, 0.4);
+}
+
+.notification-item.is-unread {
+  background: rgba(255, 241, 230, 0.8);
+}
+
+.notification-dot {
+  width: 9px;
+  height: 9px;
+  margin-top: 6px;
+  border-radius: 999px;
+  background: transparent;
+}
+
+.notification-item.is-unread .notification-dot {
+  background: #e76f51;
+}
+
+.notification-item strong,
+.notification-item p,
+.notification-item small {
+  display: block;
+}
+
+.notification-item p {
+  margin: 3px 0 4px;
+  color: #715f50;
+  font-size: 0.88rem;
+}
+
+.notification-item small {
+  color: #9b8877;
+  font-size: 0.76rem;
+}
+
 .mobile-section {
   display: none;
 }
@@ -1873,6 +1987,19 @@ time {
 
   .app-header {
     margin: 0 0 12px;
+    padding: 14px;
+  }
+
+  .header-actions {
+    gap: 8px;
+  }
+
+  .notification-panel {
+    top: calc(82px + env(safe-area-inset-top));
+    right: 12px;
+    left: 12px;
+    width: auto;
+    max-height: min(70vh, 620px);
     padding: 14px;
   }
 

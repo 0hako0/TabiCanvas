@@ -92,6 +92,38 @@ create table if not exists public.wishlist (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.notifications (
+  id uuid primary key default gen_random_uuid(),
+  couple_id uuid not null references public.couples(id) on delete cascade,
+  recipient_user_id uuid not null references auth.users(id) on delete cascade,
+  actor_user_id uuid references auth.users(id) on delete set null,
+  type text not null check (type in ('visit_created', 'photo_added', 'wishlist_created')),
+  title text not null,
+  message text,
+  related_prefecture integer check (related_prefecture between 1 and 47),
+  related_visit_id uuid references public.prefecture_visits(id) on delete set null,
+  related_wishlist_id uuid references public.wishlist(id) on delete set null,
+  is_read boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists notifications_recipient_created_idx
+on public.notifications (recipient_user_id, created_at desc);
+
+create table if not exists public.push_subscriptions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  endpoint text not null unique,
+  p256dh text not null,
+  auth text not null,
+  user_agent text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists push_subscriptions_user_id_idx
+on public.push_subscriptions (user_id);
+
 create or replace function public.is_couple_member(target_couple_id uuid)
 returns boolean
 language sql
@@ -148,6 +180,8 @@ alter table public.photos enable row level security;
 alter table public.visit_comments enable row level security;
 alter table public.tags enable row level security;
 alter table public.wishlist enable row level security;
+alter table public.notifications enable row level security;
+alter table public.push_subscriptions enable row level security;
 
 drop policy if exists "members can read their couples" on public.couples;
 drop policy if exists "members can read memberships" on public.couple_members;
@@ -160,6 +194,10 @@ drop policy if exists "members can manage photos" on public.photos;
 drop policy if exists "members can manage visit comments" on public.visit_comments;
 drop policy if exists "members can manage tags" on public.tags;
 drop policy if exists "members can manage wishlist" on public.wishlist;
+drop policy if exists "users can read own notifications" on public.notifications;
+drop policy if exists "users can update own notifications" on public.notifications;
+drop policy if exists "members can create recipient notifications" on public.notifications;
+drop policy if exists "users can manage own push subscriptions" on public.push_subscriptions;
 drop policy if exists "members can upload travel photos" on storage.objects;
 drop policy if exists "members can update travel photos" on storage.objects;
 drop policy if exists "members can delete travel photos" on storage.objects;
@@ -240,6 +278,34 @@ create policy "members can manage wishlist"
 on public.wishlist for all
 using (public.is_couple_member(couple_id))
 with check (public.is_couple_member(couple_id));
+
+create policy "users can read own notifications"
+on public.notifications for select
+using (recipient_user_id = auth.uid());
+
+create policy "users can update own notifications"
+on public.notifications for update
+using (recipient_user_id = auth.uid())
+with check (recipient_user_id = auth.uid());
+
+create policy "members can create recipient notifications"
+on public.notifications for insert
+with check (
+  actor_user_id = auth.uid()
+  and recipient_user_id <> auth.uid()
+  and public.is_couple_member(couple_id)
+  and exists (
+    select 1
+    from public.couple_members recipient
+    where recipient.couple_id = notifications.couple_id
+      and recipient.user_id = notifications.recipient_user_id
+  )
+);
+
+create policy "users can manage own push subscriptions"
+on public.push_subscriptions for all
+using (user_id = auth.uid())
+with check (user_id = auth.uid());
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('travel-photos', 'travel-photos', false, 10485760, array['image/jpeg', 'image/png', 'image/webp'])

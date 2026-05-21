@@ -1,8 +1,10 @@
 import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from 'react';
 import {
   Award,
+  Bell,
   Camera,
   CalendarDays,
+  CheckCheck,
   Clock,
   Home,
   ImagePlus,
@@ -28,6 +30,7 @@ import { PREFECTURES, REGIONS } from './data/prefectures';
 import { resizeImage } from './lib/image';
 import { isSupabaseConfigured, supabase } from './lib/supabase';
 import type {
+  AppNotification,
   Couple,
   Prefecture,
   PrefectureVisit,
@@ -79,6 +82,8 @@ export default function App() {
   const [couple, setCouple] = useState<Couple | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [memberIds, setMemberIds] = useState<string[]>([]);
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [nickname, setNickname] = useState('');
   const [visits, setVisits] = useState<PrefectureVisit[]>([]);
   const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([]);
@@ -97,6 +102,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
   useEffect(() => {
     if (!isSupabaseConfigured) {
@@ -142,6 +148,7 @@ export default function App() {
     if (member?.couple_id) {
       const { data: memberRows } = await supabase.from('couple_members').select('user_id').eq('couple_id', member.couple_id);
       const memberIds = (memberRows ?? []).map((row) => row.user_id);
+      setMemberIds(memberIds);
       if (memberIds.length > 0) {
         const { data: profileRows } = await supabase.from('profiles').select('*').in('user_id', memberIds);
         setProfiles((profileRows as Profile[] | null) ?? []);
@@ -162,6 +169,17 @@ export default function App() {
         .order('created_at', { ascending: false });
       if (wishlistError) setMessage(wishlistError.message);
       setWishlistItems((wishlist as WishlistItem[] | null) ?? []);
+      const { data: notificationRows, error: notificationError } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('recipient_user_id', session!.user.id)
+        .order('created_at', { ascending: false })
+        .limit(30);
+      if (notificationError) setMessage(notificationError.message);
+      setNotifications((notificationRows as AppNotification[] | null) ?? []);
+    } else {
+      setMemberIds([]);
+      setNotifications([]);
     }
     setLoading(false);
   }
@@ -203,6 +221,8 @@ export default function App() {
     if (!keyword) return PREFECTURES;
     return PREFECTURES.filter((prefecture) => prefecture.name.toLowerCase().includes(keyword) || prefecture.region.toLowerCase().includes(keyword));
   }, [prefectureSearch]);
+  const unreadNotificationCount = notifications.filter((notification) => !notification.is_read).length;
+  const profileById = useMemo(() => new Map(profiles.map((item) => [item.user_id, item])), [profiles]);
 
   function handlePrefectureSelect(prefecture: Prefecture) {
     setSelected(prefecture);
@@ -304,7 +324,16 @@ export default function App() {
     }
 
     if (files?.length) {
-      await uploadPhotos(visit.id, files);
+      const uploadedCount = await uploadPhotos(visit.id, files);
+      if (uploadedCount > 0) {
+        await createNotifications({
+          type: 'photo_added',
+          title: '新しい写真が追加されました',
+          message: `${(profile?.nickname ?? 'メンバー')}さんが${selectedPrefecture.name}の写真を追加しました`,
+          related_prefecture: selectedPrefecture.id,
+          related_visit_id: visit.id,
+        });
+      }
     }
 
     if (form.comment.trim() && session) {
@@ -318,6 +347,16 @@ export default function App() {
       if (commentError) {
         setMessage(commentError.message);
       }
+    }
+
+    if (!editingVisit) {
+      await createNotifications({
+        type: 'visit_created',
+        title: `${(profile?.nickname ?? 'メンバー')}さんが新しい思い出を追加しました`,
+        message: `${selectedPrefecture.name}・${form.place_name}`,
+        related_prefecture: selectedPrefecture.id,
+        related_visit_id: visit.id,
+      });
     }
 
     setForm(defaultForm);
@@ -346,7 +385,8 @@ export default function App() {
   }
 
   async function uploadPhotos(visitId: string, uploadFiles: FileList) {
-    if (!couple) return;
+    if (!couple) return 0;
+    let uploadedCount = 0;
     for (const file of Array.from(uploadFiles)) {
       const compressed = await resizeImage(file);
       const path = `${couple.id}/${visitId}/${crypto.randomUUID()}.webp`;
@@ -357,12 +397,18 @@ export default function App() {
         setMessage(uploadError.message);
         continue;
       }
-      await supabase.from('photos').insert({
+      const { error: photoError } = await supabase.from('photos').insert({
         couple_id: couple.id,
         visit_id: visitId,
         storage_path: path,
       });
+      if (photoError) {
+        setMessage(photoError.message);
+        continue;
+      }
+      uploadedCount += 1;
     }
+    return uploadedCount;
   }
 
   async function attachSignedPhotoUrls(nextVisits: PrefectureVisit[]) {
@@ -418,18 +464,29 @@ export default function App() {
   async function handleWishlistSubmit(event: FormEvent) {
     event.preventDefault();
     if (!couple || !selectedPrefecture) return;
-    const { error } = await supabase.from('wishlist').insert({
-      couple_id: couple.id,
-      prefecture_id: selectedPrefecture.id,
-      title: wishlistForm.title,
-      food: wishlistForm.food || null,
-      sightseeing: wishlistForm.sightseeing || null,
-      memo: wishlistForm.memo || null,
-    });
+    const { data: wishlist, error } = await supabase
+      .from('wishlist')
+      .insert({
+        couple_id: couple.id,
+        prefecture_id: selectedPrefecture.id,
+        title: wishlistForm.title,
+        food: wishlistForm.food || null,
+        sightseeing: wishlistForm.sightseeing || null,
+        memo: wishlistForm.memo || null,
+      })
+      .select()
+      .single();
     if (error) {
       setMessage(error.message);
       return;
     }
+    await createNotifications({
+      type: 'wishlist_created',
+      title: '行きたい場所が追加されました',
+      message: `${(profile?.nickname ?? 'メンバー')}さんが${selectedPrefecture.name}に「${wishlistForm.title}」を追加しました`,
+      related_prefecture: selectedPrefecture.id,
+      related_wishlist_id: (wishlist as WishlistItem).id,
+    });
     setWishlistForm(defaultWishlistForm);
     await loadCoupleAndVisits();
   }
@@ -457,10 +514,64 @@ export default function App() {
     await loadCoupleAndVisits();
   }
 
+  async function createNotifications(input: {
+    type: AppNotification['type'];
+    title: string;
+    message: string;
+    related_prefecture?: number;
+    related_visit_id?: string;
+    related_wishlist_id?: string;
+  }) {
+    if (!couple || !session) return;
+    const recipients = memberIds.filter((userId) => userId !== session.user.id);
+    if (recipients.length === 0) return;
+    const payload = recipients.map((recipientUserId) => ({
+      couple_id: couple.id,
+      recipient_user_id: recipientUserId,
+      actor_user_id: session.user.id,
+      type: input.type,
+      title: input.title,
+      message: input.message,
+      related_prefecture: input.related_prefecture ?? null,
+      related_visit_id: input.related_visit_id ?? null,
+      related_wishlist_id: input.related_wishlist_id ?? null,
+    }));
+    const { error } = await supabase.from('notifications').insert(payload);
+    if (error) setMessage(error.message);
+  }
+
   async function deleteComment(commentId: string) {
     const { error } = await supabase.from('visit_comments').delete().eq('id', commentId);
     if (error) setMessage(error.message);
     await loadCoupleAndVisits();
+  }
+
+  async function markNotificationRead(notificationId: string) {
+    const { error } = await supabase.from('notifications').update({ is_read: true }).eq('id', notificationId);
+    if (error) {
+      setMessage(error.message);
+      return;
+    }
+    setNotifications((current) => current.map((item) => (item.id === notificationId ? { ...item, is_read: true } : item)));
+  }
+
+  async function markAllNotificationsRead() {
+    const { error } = await supabase.from('notifications').update({ is_read: true }).eq('recipient_user_id', session!.user.id).eq('is_read', false);
+    if (error) {
+      setMessage(error.message);
+      return;
+    }
+    setNotifications((current) => current.map((item) => ({ ...item, is_read: true })));
+  }
+
+  async function openNotification(notification: AppNotification) {
+    await markNotificationRead(notification.id);
+    const prefecture = notification.related_prefecture
+      ? PREFECTURES.find((item) => item.id === notification.related_prefecture)
+      : null;
+    if (prefecture) setSelected(prefecture);
+    setActiveMobileView(notification.type === 'wishlist_created' ? 'plan' : 'timeline');
+    setIsNotificationOpen(false);
   }
 
   if (!isSupabaseConfigured) {
@@ -507,17 +618,69 @@ export default function App() {
 
   return (
     <main className="page-shell">
-      <header className={`app-header ${activeMobileView === 'home' ? 'is-home' : ''}`}>
+      <header className={"app-header " + (activeMobileView === 'home' ? 'is-home' : '')}>
         <div>
           <h1>TabiCanvas</h1>
           <p>
-            {profile.nickname}でログイン中 / 招待コード: <strong>{couple.invite_code}</strong>
+            {(profile?.nickname ?? 'メンバー')}でログイン中 / 招待コード: <strong>{couple.invite_code}</strong>
           </p>
         </div>
-        <button className="icon-button" aria-label="ログアウト" onClick={() => supabase.auth.signOut()}>
-          <LogOut size={20} />
-        </button>
+        <div className="header-actions">
+          <button className="icon-button notification-button" aria-label="通知" onClick={() => setIsNotificationOpen((value) => !value)}>
+            <Bell size={20} />
+            {unreadNotificationCount > 0 && <span className="notification-badge">{unreadNotificationCount}</span>}
+          </button>
+          <button className="icon-button" aria-label="ログアウト" onClick={() => supabase.auth.signOut()}>
+            <LogOut size={20} />
+          </button>
+        </div>
       </header>
+
+      {isNotificationOpen && (
+        <section className="notification-panel" aria-label="通知一覧">
+          <div className="notification-panel-head">
+            <div>
+              <p className="eyebrow">Notifications</p>
+              <h2>通知</h2>
+            </div>
+            <button className="text-button inline" onClick={markAllNotificationsRead} disabled={unreadNotificationCount === 0}>
+              <CheckCheck size={15} />
+              すべて既読
+            </button>
+          </div>
+          {notifications.length === 0 ? (
+            <p className="empty compact">まだ通知はありません。</p>
+          ) : (
+            <div className="notification-list">
+              {notifications.map((notification) => {
+                const actorName = profileById.get(notification.actor_user_id ?? '')?.nickname;
+                return (
+                  <button
+                    key={notification.id}
+                    className={`notification-item ${notification.is_read ? '' : 'is-unread'}`}
+                    onClick={() => openNotification(notification)}
+                  >
+                    <span className="notification-dot" />
+                    <div>
+                      <strong>{notification.title}</strong>
+                      <p>{notification.message}</p>
+                      <small>
+                        {actorName ? `${actorName}さん / ` : ''}
+                        {new Date(notification.created_at).toLocaleString('ja-JP', {
+                          month: 'numeric',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </small>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      )}
 
       {message && <p className="notice">{message}</p>}
 
@@ -563,9 +726,13 @@ export default function App() {
           <div className="desktop-greeting">
             <div>
               <p className="eyebrow">Travel album</p>
-              <h2>こんにちは、{profile.nickname}さん</h2>
+              <h2>こんにちは、{(profile?.nickname ?? 'メンバー')}さん</h2>
               <p>地図をなぞるように、旅の記録を振り返りましょう。</p>
             </div>
+            <button className="icon-button notification-button" aria-label="通知" onClick={() => setIsNotificationOpen((value) => !value)}>
+              <Bell size={20} />
+              {unreadNotificationCount > 0 && <span className="notification-badge">{unreadNotificationCount}</span>}
+            </button>
             <button className="primary-button" onClick={openPrefecturePicker}>
               <Plus size={18} />
               思い出を追加

@@ -141,3 +141,12 @@ npm run dev
 npm run build
 npm run preview
 ```
+
+## アプリ内通知
+
+`supabase/schema.sql` に `notifications` と `push_subscriptions` を追加しています。
+
+- `notifications`: 思い出、写真、行きたい場所の追加をアプリ内で知らせる通知
+- `push_subscriptions`: 将来のPWAプッシュ通知用の購読情報
+
+通知は `recipient_user_id` が自分のものだけ読めるRLSです。同じ招待コードのメンバーに対してのみ作成でき、自分自身には通知を作りません。

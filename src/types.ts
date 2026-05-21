@@ -61,6 +61,21 @@ export type WishlistItem = {
   created_at: string;
 };
 
+export type AppNotification = {
+  id: string;
+  couple_id: string;
+  recipient_user_id: string;
+  actor_user_id: string | null;
+  type: 'visit_created' | 'photo_added' | 'wishlist_created';
+  title: string;
+  message: string | null;
+  related_prefecture: number | null;
+  related_visit_id: string | null;
+  related_wishlist_id: string | null;
+  is_read: boolean;
+  created_at: string;
+};
+
 export type VisitFormState = {
   visited_on: string;
   place_name: string;
