@@ -150,3 +150,18 @@ npm run preview
 - `push_subscriptions`: 将来のPWAプッシュ通知用の購読情報
 
 通知は `recipient_user_id` が自分のものだけ読めるRLSです。同じ招待コードのメンバーに対してのみ作成でき、自分自身には通知を作りません。
+
+## アカウント管理
+
+設定の「アカウント管理」から、データエクスポート、アカウント停止、復元、完全削除を実行できます。危険な操作は確認文字の入力が必要です。
+
+Supabase SQL Editorで `supabase/schema.sql` を再実行したあと、Edge Functionsをデプロイしてください。
+
+```bash
+supabase functions deploy account-export
+supabase functions deploy account-deactivate
+supabase functions deploy account-restore
+supabase functions deploy account-delete
+```
+
+Edge Functionsは `SUPABASE_SERVICE_ROLE_KEY` を使ってサーバー側で本人確認と削除処理を行います。Service Role Keyはフロントエンドの環境変数には絶対に入れないでください。

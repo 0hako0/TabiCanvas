@@ -763,6 +763,76 @@ textarea:focus {
   font-size: 0.76rem;
 }
 
+.account-management {
+  display: grid;
+  gap: 14px;
+  border-color: rgba(185, 74, 49, 0.24);
+}
+
+.account-management-dialog {
+  max-width: 620px;
+}
+
+.danger-title {
+  color: #b94a31;
+}
+
+.account-help {
+  color: #715f50;
+  line-height: 1.8;
+}
+
+.account-warning {
+  display: grid;
+  gap: 8px;
+  border: 1px solid rgba(231, 111, 81, 0.28);
+  border-radius: 12px;
+  padding: 12px;
+  background: #fff1e8;
+}
+
+.danger-form {
+  display: grid;
+  gap: 10px;
+  border: 1px solid rgba(185, 74, 49, 0.22);
+  border-radius: 12px;
+  padding: 12px;
+  background: rgba(255, 247, 241, 0.86);
+}
+
+.danger-form strong {
+  color: #8f3425;
+}
+
+.danger-form p {
+  color: #806b5b;
+  font-size: 0.88rem;
+}
+
+.danger-button {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid rgba(185, 74, 49, 0.4);
+  border-radius: 12px;
+  background: #fff1e8;
+  color: #9d3a29;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.danger-button.solid {
+  background: #b94a31;
+  color: #fff;
+}
+
+.danger-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.52;
+}
+
 .mobile-section {
   display: none;
 }

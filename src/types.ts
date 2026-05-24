@@ -16,6 +16,10 @@ export type Profile = {
   user_id: string;
   nickname: string;
   avatar_url: string | null;
+  account_status?: 'active' | 'deactivated' | 'scheduled_for_deletion';
+  deletion_scheduled_at?: string | null;
+  deletion_due_at?: string | null;
+  deactivated_at?: string | null;
 };
 
 export type VisitPhoto = {
@@ -66,7 +70,7 @@ export type AppNotification = {
   couple_id: string;
   recipient_user_id: string;
   actor_user_id: string | null;
-  type: 'visit_created' | 'photo_added' | 'wishlist_created';
+  type: 'visit_created' | 'photo_added' | 'wishlist_created' | 'account_status';
   title: string;
   message: string | null;
   related_prefecture: number | null;

@@ -21,9 +21,26 @@ create table if not exists public.profiles (
   user_id uuid primary key references auth.users(id) on delete cascade,
   nickname text not null,
   avatar_url text,
+  account_status text not null default 'active' check (account_status in ('active', 'deactivated', 'scheduled_for_deletion')),
+  deletion_scheduled_at timestamptz,
+  deletion_due_at timestamptz,
+  deactivated_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.profiles
+add column if not exists account_status text not null default 'active'
+check (account_status in ('active', 'deactivated', 'scheduled_for_deletion'));
+
+alter table public.profiles
+add column if not exists deletion_scheduled_at timestamptz;
+
+alter table public.profiles
+add column if not exists deletion_due_at timestamptz;
+
+alter table public.profiles
+add column if not exists deactivated_at timestamptz;
 
 create table if not exists public.prefecture_visits (
   id uuid primary key default gen_random_uuid(),
@@ -97,7 +114,7 @@ create table if not exists public.notifications (
   couple_id uuid not null references public.couples(id) on delete cascade,
   recipient_user_id uuid not null references auth.users(id) on delete cascade,
   actor_user_id uuid references auth.users(id) on delete set null,
-  type text not null check (type in ('visit_created', 'photo_added', 'wishlist_created')),
+  type text not null check (type in ('visit_created', 'photo_added', 'wishlist_created', 'account_status')),
   title text not null,
   message text,
   related_prefecture integer check (related_prefecture between 1 and 47),
@@ -106,6 +123,13 @@ create table if not exists public.notifications (
   is_read boolean not null default false,
   created_at timestamptz not null default now()
 );
+
+alter table public.notifications
+drop constraint if exists notifications_type_check;
+
+alter table public.notifications
+add constraint notifications_type_check
+check (type in ('visit_created', 'photo_added', 'wishlist_created', 'account_status'));
 
 create index if not exists notifications_recipient_created_idx
 on public.notifications (recipient_user_id, created_at desc);

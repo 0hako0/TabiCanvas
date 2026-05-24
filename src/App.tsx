@@ -19,6 +19,7 @@ import {
   X,
 } from 'lucide-react';
 import type { Session } from '@supabase/supabase-js';
+import { AccountManagement } from './components/AccountManagement';
 import { AuthScreen } from './components/AuthScreen';
 import { BadgePanel } from './components/BadgePanel';
 import { CoupleSetup } from './components/CoupleSetup';
@@ -103,6 +104,7 @@ export default function App() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [isAccountManagementOpen, setIsAccountManagementOpen] = useState(false);
 
   useEffect(() => {
     if (!isSupabaseConfigured) {
@@ -614,6 +616,13 @@ export default function App() {
       </main>
     );
   }
+  if (profile.account_status && profile.account_status !== 'active') {
+    return (
+      <main className="auth-shell">
+        <AccountManagement profile={profile} onChanged={loadCoupleAndVisits} />
+      </main>
+    );
+  }
   if (!couple) return <CoupleSetup onReady={loadCoupleAndVisits} />;
 
   return (
@@ -682,6 +691,23 @@ export default function App() {
         </section>
       )}
 
+      {isAccountManagementOpen && (
+        <div className="editor-backdrop" role="dialog" aria-modal="true" aria-label="アカウント管理">
+          <aside className="panel editor-panel account-management-dialog">
+            <div className="editor-panel-head">
+              <div className="section-title danger-title">
+                <Settings size={18} />
+                <h2>アカウント管理</h2>
+              </div>
+              <button className="icon-button small" aria-label="閉じる" onClick={() => setIsAccountManagementOpen(false)}>
+                <X size={16} />
+              </button>
+            </div>
+            <AccountManagement profile={profile} onChanged={loadCoupleAndVisits} />
+          </aside>
+        </div>
+      )}
+
       {message && <p className="notice">{message}</p>}
 
       <section className="desktop-album-layout">
@@ -711,7 +737,7 @@ export default function App() {
               <Award size={19} />
               バッジ
             </button>
-            <button onClick={() => supabase.auth.signOut()}>
+            <button onClick={() => setIsAccountManagementOpen(true)}>
               <Settings size={19} />
               設定
             </button>
