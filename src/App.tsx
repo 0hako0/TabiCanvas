@@ -635,6 +635,9 @@ export default function App() {
           </p>
         </div>
         <div className="header-actions">
+          <button className="icon-button" aria-label="設定" onClick={() => setIsAccountManagementOpen(true)}>
+            <Settings size={20} />
+          </button>
           <button className="icon-button notification-button" aria-label="通知" onClick={() => setIsNotificationOpen((value) => !value)}>
             <Bell size={20} />
             {unreadNotificationCount > 0 && <span className="notification-badge">{unreadNotificationCount}</span>}
@@ -703,7 +706,7 @@ export default function App() {
                 <X size={16} />
               </button>
             </div>
-            <AccountManagement profile={profile} onChanged={loadCoupleAndVisits} />
+            <AccountManagement profile={profile} inviteCode={couple.invite_code} onChanged={loadCoupleAndVisits} />
           </aside>
         </div>
       )}

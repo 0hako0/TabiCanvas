@@ -771,6 +771,67 @@ textarea:focus {
 
 .account-management-dialog {
   max-width: 620px;
+  max-height: min(86vh, 760px);
+  overflow: auto;
+}
+
+.settings-backdrop {
+  align-items: flex-start;
+  padding-top: calc(24px + env(safe-area-inset-top));
+}
+
+.settings-section {
+  display: grid;
+  gap: 12px;
+  border: 1px solid rgba(234, 216, 197, 0.75);
+  border-radius: 14px;
+  padding: 14px;
+  background: rgba(255, 253, 248, 0.7);
+}
+
+.settings-section h3 {
+  margin: 0;
+  color: #3f342f;
+}
+
+.profile-settings {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+}
+
+.profile-avatar {
+  display: grid;
+  width: 54px;
+  height: 54px;
+  place-items: center;
+  border-radius: 18px;
+  background: linear-gradient(145deg, #fff1e8, #eef7ec);
+  color: #6f8f6a;
+  font-size: 1.5rem;
+  font-weight: 900;
+}
+
+.profile-settings p,
+.settings-toggle small {
+  margin: 3px 0 0;
+  color: #806b5b;
+}
+
+.settings-toggle {
+  display: flex;
+  min-height: 58px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid rgba(234, 216, 197, 0.7);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.settings-toggle input {
+  width: 22px;
+  height: 22px;
 }
 
 .danger-title {
