@@ -770,9 +770,11 @@ textarea:focus {
 }
 
 .account-management-dialog {
+  width: min(620px, calc(100vw - 28px));
   max-width: 620px;
   max-height: min(86vh, 760px);
   overflow: auto;
+  padding-bottom: max(18px, env(safe-area-inset-bottom));
 }
 
 .settings-backdrop {
@@ -830,8 +832,14 @@ textarea:focus {
 }
 
 .settings-toggle input {
+  flex: 0 0 auto;
   width: 22px;
   height: 22px;
+  cursor: pointer;
+}
+
+.settings-toggle.is-disabled {
+  opacity: 0.72;
 }
 
 .danger-title {
@@ -889,9 +897,56 @@ textarea:focus {
   color: #fff;
 }
 
+.danger-button.stop {
+  border-color: rgba(219, 125, 75, 0.42);
+  background: #fff1e6;
+  color: #a4572d;
+}
+
+.danger-button.stop.solid-ish {
+  background: #d96f45;
+  color: #fff;
+}
+
 .danger-button:disabled {
   cursor: not-allowed;
   opacity: 0.52;
+}
+
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: max(18px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) max(18px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
+  background: rgba(63, 52, 45, 0.34);
+  backdrop-filter: blur(6px);
+}
+
+.confirm-dialog {
+  display: grid;
+  width: min(430px, 100%);
+  gap: 16px;
+  border: 1px solid rgba(234, 216, 197, 0.86);
+  border-radius: 18px;
+  padding: 18px;
+  background:
+    linear-gradient(135deg, rgba(255, 253, 248, 0.98), rgba(255, 247, 240, 0.96)),
+    #fffaf3;
+  box-shadow: 0 22px 54px rgba(63, 52, 45, 0.22);
+}
+
+.confirm-dialog p {
+  margin: 0;
+  color: #68584d;
+  line-height: 1.75;
+}
+
+.confirm-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
 }
 
 .mobile-section {
@@ -2117,12 +2172,32 @@ time {
   }
 
   .app-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 8px;
     margin: 0 0 12px;
-    padding: 14px;
+    padding: 14px max(12px, env(safe-area-inset-right)) 14px max(12px, env(safe-area-inset-left));
+  }
+
+  .app-header > div:first-child {
+    min-width: 0;
   }
 
   .header-actions {
-    gap: 8px;
+    flex: 0 0 auto;
+    gap: 6px;
+  }
+
+  .app-header .icon-button {
+    width: 38px;
+    min-height: 38px;
+    border-radius: 12px;
+  }
+
+  .app-header .icon-button svg {
+    width: 18px;
+    height: 18px;
   }
 
   .notification-panel {
@@ -2136,7 +2211,7 @@ time {
 
   .app-header.is-home {
     margin-bottom: 0;
-    padding: 20px 18px 18px;
+    padding: 18px max(12px, env(safe-area-inset-right)) 18px max(14px, env(safe-area-inset-left));
     border-color: rgba(164, 139, 111, 0.2);
     border-bottom-color: rgba(164, 139, 111, 0.08);
     border-radius: 16px 16px 0 0;
@@ -2156,7 +2231,7 @@ time {
   }
 
   .app-header.is-home::before {
-    right: 72px;
+    right: 54px;
     top: 18px;
     color: rgba(143, 111, 84, 0.38);
     font-size: 0.72rem;
@@ -2176,20 +2251,24 @@ time {
   }
 
   .app-header.is-home .icon-button {
-    width: 52px;
-    height: 52px;
+    width: 40px;
+    height: 40px;
+    min-height: 40px;
     border-radius: 14px;
     background: rgba(255, 250, 242, 0.82);
     box-shadow: 0 8px 18px rgba(83, 55, 37, 0.08);
   }
 
   .app-header h1 {
-    font-size: 2rem;
+    font-size: clamp(1.85rem, 8vw, 2.55rem);
+    line-height: 1.05;
   }
 
   .app-header p {
-    font-size: 0.9rem;
+    max-width: 100%;
+    font-size: clamp(0.78rem, 3.6vw, 0.92rem);
     line-height: 1.45;
+    overflow-wrap: anywhere;
   }
 
   .mobile-section {
@@ -3172,6 +3251,38 @@ body {
 
 .photo-grid figure:nth-child(2n) {
   transform: rotate(0.5deg);
+}
+
+@media (max-width: 380px) {
+  .app-header {
+    padding-right: max(10px, env(safe-area-inset-right));
+    padding-left: max(10px, env(safe-area-inset-left));
+  }
+
+  .header-actions {
+    gap: 4px;
+  }
+
+  .app-header .icon-button,
+  .app-header.is-home .icon-button {
+    width: 34px;
+    height: 34px;
+    min-height: 34px;
+    border-radius: 11px;
+  }
+
+  .app-header .icon-button svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .notification-badge {
+    top: -4px;
+    right: -4px;
+    min-width: 17px;
+    height: 17px;
+    font-size: 0.62rem;
+  }
 }
 
 @media (min-width: 901px) {

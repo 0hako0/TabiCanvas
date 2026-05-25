@@ -80,6 +80,14 @@ export type AppNotification = {
   created_at: string;
 };
 
+export type UserSettings = {
+  user_id: string;
+  in_app_notifications_enabled: boolean;
+  push_notifications_enabled: boolean;
+  created_at?: string;
+  updated_at?: string;
+};
+
 export type VisitFormState = {
   visited_on: string;
   place_name: string;

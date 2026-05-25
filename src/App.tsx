@@ -36,6 +36,7 @@ import type {
   Prefecture,
   PrefectureVisit,
   Profile,
+  UserSettings,
   VisitFormState,
   VisitPhoto,
   WishlistFormState,
@@ -85,6 +86,7 @@ export default function App() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [memberIds, setMemberIds] = useState<string[]>([]);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const [userSettings, setUserSettings] = useState<UserSettings | null>(null);
   const [nickname, setNickname] = useState('');
   const [visits, setVisits] = useState<PrefectureVisit[]>([]);
   const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([]);
@@ -137,6 +139,19 @@ export default function App() {
     setProfile((ownProfile as Profile | null) ?? null);
     setNickname((ownProfile as Profile | null)?.nickname ?? '');
 
+    const defaultUserSettings: UserSettings = {
+      user_id: session!.user.id,
+      in_app_notifications_enabled: true,
+      push_notifications_enabled: false,
+    };
+    const { data: settingsRow } = await supabase
+      .from('user_settings')
+      .select('*')
+      .eq('user_id', session!.user.id)
+      .maybeSingle();
+    const nextUserSettings = (settingsRow as UserSettings | null) ?? defaultUserSettings;
+    setUserSettings(nextUserSettings);
+
     const { data: member, error: memberError } = await supabase
       .from('couple_members')
       .select('couple_id, couples(id, name, invite_code)')
@@ -171,14 +186,18 @@ export default function App() {
         .order('created_at', { ascending: false });
       if (wishlistError) setMessage(wishlistError.message);
       setWishlistItems((wishlist as WishlistItem[] | null) ?? []);
-      const { data: notificationRows, error: notificationError } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('recipient_user_id', session!.user.id)
-        .order('created_at', { ascending: false })
-        .limit(30);
-      if (notificationError) setMessage(notificationError.message);
-      setNotifications((notificationRows as AppNotification[] | null) ?? []);
+      if (nextUserSettings.in_app_notifications_enabled === false) {
+        setNotifications([]);
+      } else {
+        const { data: notificationRows, error: notificationError } = await supabase
+          .from('notifications')
+          .select('*')
+          .eq('recipient_user_id', session!.user.id)
+          .order('created_at', { ascending: false })
+          .limit(30);
+        if (notificationError) setMessage(notificationError.message);
+        setNotifications((notificationRows as AppNotification[] | null) ?? []);
+      }
     } else {
       setMemberIds([]);
       setNotifications([]);
@@ -619,7 +638,13 @@ export default function App() {
   if (profile.account_status && profile.account_status !== 'active') {
     return (
       <main className="auth-shell">
-        <AccountManagement profile={profile} onChanged={loadCoupleAndVisits} />
+        <AccountManagement
+          profile={profile}
+          inAppNotificationsEnabled={userSettings?.in_app_notifications_enabled ?? true}
+          pushNotificationsEnabled={userSettings?.push_notifications_enabled ?? false}
+          onSettingsChanged={loadCoupleAndVisits}
+          onChanged={loadCoupleAndVisits}
+        />
       </main>
     );
   }
@@ -706,7 +731,14 @@ export default function App() {
                 <X size={16} />
               </button>
             </div>
-            <AccountManagement profile={profile} inviteCode={couple.invite_code} onChanged={loadCoupleAndVisits} />
+            <AccountManagement
+              profile={profile}
+              inviteCode={couple.invite_code}
+              inAppNotificationsEnabled={userSettings?.in_app_notifications_enabled ?? true}
+              pushNotificationsEnabled={userSettings?.push_notifications_enabled ?? false}
+              onSettingsChanged={loadCoupleAndVisits}
+              onChanged={loadCoupleAndVisits}
+            />
           </aside>
         </div>
       )}

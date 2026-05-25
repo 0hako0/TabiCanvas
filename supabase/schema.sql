@@ -148,6 +148,14 @@ create table if not exists public.push_subscriptions (
 create index if not exists push_subscriptions_user_id_idx
 on public.push_subscriptions (user_id);
 
+create table if not exists public.user_settings (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  in_app_notifications_enabled boolean not null default true,
+  push_notifications_enabled boolean not null default false,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 create or replace function public.is_couple_member(target_couple_id uuid)
 returns boolean
 language sql
@@ -206,6 +214,7 @@ alter table public.tags enable row level security;
 alter table public.wishlist enable row level security;
 alter table public.notifications enable row level security;
 alter table public.push_subscriptions enable row level security;
+alter table public.user_settings enable row level security;
 
 drop policy if exists "members can read their couples" on public.couples;
 drop policy if exists "members can read memberships" on public.couple_members;
@@ -222,6 +231,7 @@ drop policy if exists "users can read own notifications" on public.notifications
 drop policy if exists "users can update own notifications" on public.notifications;
 drop policy if exists "members can create recipient notifications" on public.notifications;
 drop policy if exists "users can manage own push subscriptions" on public.push_subscriptions;
+drop policy if exists "users can manage own settings" on public.user_settings;
 drop policy if exists "members can upload travel photos" on storage.objects;
 drop policy if exists "members can update travel photos" on storage.objects;
 drop policy if exists "members can delete travel photos" on storage.objects;
@@ -328,6 +338,11 @@ with check (
 
 create policy "users can manage own push subscriptions"
 on public.push_subscriptions for all
+using (user_id = auth.uid())
+with check (user_id = auth.uid());
+
+create policy "users can manage own settings"
+on public.user_settings for all
 using (user_id = auth.uid())
 with check (user_id = auth.uid());
 
