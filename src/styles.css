@@ -1468,10 +1468,10 @@ textarea:focus {
 
 .map-polaroid-photo {
   position: absolute;
-  width: clamp(118px, 15vw, 158px);
+  width: clamp(88px, 11vw, 118px);
   border: 0;
   border-radius: 7px;
-  padding: 7px 7px 34px;
+  padding: 6px 6px 28px;
   background:
     linear-gradient(180deg, rgba(255, 253, 248, 0.98), rgba(255, 249, 240, 0.96)),
     #fffaf2;
@@ -1490,15 +1490,15 @@ textarea:focus {
 }
 
 .map-polaroid-photo.is-large {
-  width: clamp(136px, 17vw, 176px);
+  width: clamp(102px, 12.75vw, 132px);
 }
 
 .map-polaroid-photo.is-medium {
-  width: clamp(118px, 15vw, 150px);
+  width: clamp(88px, 11vw, 112px);
 }
 
 .map-polaroid-photo.is-small {
-  width: clamp(104px, 13vw, 132px);
+  width: clamp(78px, 9.75vw, 100px);
 }
 
 .map-polaroid-photo:hover,
@@ -1530,7 +1530,7 @@ textarea:focus {
   gap: 2px;
   overflow: hidden;
   color: #806b5b;
-  font-size: 0.66rem;
+  font-size: 0.58rem;
   font-weight: 900;
   line-height: 1.05;
   text-overflow: ellipsis;
@@ -1551,15 +1551,15 @@ textarea:focus {
 
 .map-polaroid-caption strong {
   color: #4b4138;
-  font-size: 0.72rem;
+  font-size: 0.64rem;
 }
 
 .map-polaroid-tape {
   position: absolute;
   top: -7px;
   left: 50%;
-  width: 30px;
-  height: 13px;
+  width: 24px;
+  height: 11px;
   border-radius: 3px;
   background: rgba(238, 217, 190, 0.72);
   box-shadow: 0 2px 6px rgba(83, 55, 37, 0.08);
@@ -1567,33 +1567,30 @@ textarea:focus {
 }
 
 .map-polaroid-photo.slot-1 {
-  top: 20%;
-  left: 5%;
-  transform: rotate(-5deg);
-}
-
-.map-polaroid-photo.slot-2 {
-  top: 14%;
-  right: 6%;
-  transform: rotate(4deg);
-}
-
-.map-polaroid-photo.slot-3 {
-  top: 43%;
-  left: 6%;
-  transform: rotate(5deg);
-}
-
-.map-polaroid-photo.slot-4 {
-  top: 54%;
-  right: 5%;
+  top: 24%;
+  left: 4%;
   transform: rotate(-4deg);
 }
 
-.map-polaroid-photo.slot-5 {
-  right: 35%;
-  bottom: 6%;
+.map-polaroid-photo.slot-2 {
+  top: 15%;
+  right: 4%;
   transform: rotate(3deg);
+}
+
+.map-polaroid-photo.slot-3 {
+  right: 36%;
+  bottom: 7%;
+  left: auto;
+  transform: rotate(3deg);
+}
+
+.map-polaroid-photo.slot-4 {
+  display: none;
+}
+
+.map-polaroid-photo.slot-5 {
+  display: none;
 }
 
 @keyframes map-photo-appear {
@@ -3227,56 +3224,56 @@ time {
   }
 
   .map-polaroid-photo {
-    width: clamp(104px, 24vw, 124px);
-    padding: 6px 6px 31px;
+    width: clamp(78px, 18vw, 94px);
+    padding: 5px 5px 24px;
     border-radius: 6px;
   }
 
   .map-polaroid-photo.is-large {
-    width: clamp(122px, 30vw, 148px);
+    width: clamp(90px, 22vw, 112px);
   }
 
   .map-polaroid-photo.is-medium {
-    width: clamp(108px, 26vw, 132px);
+    width: clamp(82px, 19.5vw, 100px);
   }
 
   .map-polaroid-photo.is-small {
-    width: clamp(96px, 23vw, 116px);
+    width: clamp(70px, 16vw, 86px);
   }
 
   .map-polaroid-caption {
-    font-size: 0.62rem;
+    font-size: 0.54rem;
   }
 
   .map-polaroid-caption strong {
-    font-size: 0.68rem;
+    font-size: 0.58rem;
   }
 
   .map-polaroid-photo.slot-1 {
-    top: 22%;
-    left: 4%;
+    top: 24%;
+    left: 5%;
     right: auto;
   }
 
   .map-polaroid-photo.slot-2 {
-    top: 15%;
-    right: 4%;
+    top: 16%;
+    right: 5%;
     left: auto;
   }
 
   .map-polaroid-photo.slot-3 {
-    top: 43%;
-    left: 4%;
+    right: 35%;
+    bottom: 6%;
+    left: auto;
+    top: auto;
   }
 
   .map-polaroid-photo.slot-4 {
-    top: 55%;
-    right: 3%;
+    display: none;
   }
 
   .map-polaroid-photo.slot-5 {
-    right: 31%;
-    bottom: 6%;
+    display: none;
   }
 
   .wishlist-form {

@@ -8,7 +8,6 @@ type CollagePhoto = {
   src: string;
   placeName: string;
   prefectureName: string;
-  visitedOn: string;
   visit: PrefectureVisit;
 };
 
@@ -32,7 +31,6 @@ export function MapPhotoCollage({ visits, onOpenVisit }: Props) {
           src: getPhotoSrc(photo),
           placeName: visit.place_name,
           prefectureName,
-          visitedOn: visit.visited_on,
           visit,
         }));
       })
@@ -41,16 +39,16 @@ export function MapPhotoCollage({ visits, onOpenVisit }: Props) {
   }, [visits]);
 
   useEffect(() => {
-    if (photos.length <= 5) return undefined;
+    if (photos.length <= 3) return undefined;
     const timer = window.setInterval(() => {
       setSlideIndex((current) => (current + 1) % photos.length);
-    }, 5200);
+    }, 5600);
     return () => window.clearInterval(timer);
   }, [photos.length]);
 
   const visiblePhotos = useMemo(() => {
-    if (photos.length <= 5) return photos;
-    return Array.from({ length: 5 }, (_, index) => photos[(slideIndex + index) % photos.length]);
+    if (photos.length <= 3) return photos;
+    return Array.from({ length: 3 }, (_, index) => photos[(slideIndex + index) % photos.length]);
   }, [photos, slideIndex]);
 
   if (visiblePhotos.length === 0) return null;
@@ -60,7 +58,7 @@ export function MapPhotoCollage({ visits, onOpenVisit }: Props) {
       {visiblePhotos.map((photo, index) => (
         <button
           key={`${photo.id}-${index}`}
-          className={`map-polaroid-photo slot-${index + 1} ${index === 0 || index === 4 ? 'is-large' : index === 3 ? 'is-small' : 'is-medium'}`}
+          className={`map-polaroid-photo slot-${index + 1} ${index === 1 ? 'is-small' : 'is-medium'}`}
           type="button"
           onClick={() => onOpenVisit(photo.visit)}
           aria-label={`${photo.prefectureName} ${photo.placeName}の思い出を見る`}
@@ -77,7 +75,7 @@ export function MapPhotoCollage({ visits, onOpenVisit }: Props) {
           />
           <span className="map-polaroid-caption">
             <span>
-              <MapPin size={11} />
+              <MapPin size={10} />
               {photo.prefectureName}
             </span>
             <strong>{photo.placeName}</strong>
