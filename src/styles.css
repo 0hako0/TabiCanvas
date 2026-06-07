@@ -1468,10 +1468,10 @@ textarea:focus {
 
 .map-polaroid-photo {
   position: absolute;
-  width: clamp(72px, 12vw, 116px);
+  width: clamp(118px, 15vw, 158px);
   border: 0;
   border-radius: 7px;
-  padding: 6px 6px 18px;
+  padding: 7px 7px 34px;
   background:
     linear-gradient(180deg, rgba(255, 253, 248, 0.98), rgba(255, 249, 240, 0.96)),
     #fffaf2;
@@ -1483,6 +1483,22 @@ textarea:focus {
   transform-origin: center;
   transition: transform 160ms ease, box-shadow 160ms ease;
   animation: map-photo-appear 420ms ease both;
+}
+
+.map-polaroid-photo[hidden] {
+  display: none;
+}
+
+.map-polaroid-photo.is-large {
+  width: clamp(136px, 17vw, 176px);
+}
+
+.map-polaroid-photo.is-medium {
+  width: clamp(118px, 15vw, 150px);
+}
+
+.map-polaroid-photo.is-small {
+  width: clamp(104px, 13vw, 132px);
 }
 
 .map-polaroid-photo:hover,
@@ -1505,19 +1521,37 @@ textarea:focus {
 .map-polaroid-caption {
   position: absolute;
   right: 6px;
-  bottom: 5px;
+  bottom: 6px;
   left: 6px;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
+  gap: 2px;
   overflow: hidden;
   color: #806b5b;
   font-size: 0.66rem;
   font-weight: 900;
-  line-height: 1;
+  line-height: 1.05;
+  text-overflow: ellipsis;
+  white-space: normal;
+}
+
+.map-polaroid-caption span,
+.map-polaroid-caption strong {
+  display: flex;
+  max-width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.map-polaroid-caption strong {
+  color: #4b4138;
+  font-size: 0.72rem;
 }
 
 .map-polaroid-tape {
@@ -1533,33 +1567,33 @@ textarea:focus {
 }
 
 .map-polaroid-photo.slot-1 {
-  top: 13%;
-  right: 12%;
-  transform: rotate(3deg);
+  top: 20%;
+  left: 5%;
+  transform: rotate(-5deg);
 }
 
 .map-polaroid-photo.slot-2 {
-  top: 29%;
-  left: 5%;
-  transform: rotate(-6deg);
+  top: 14%;
+  right: 6%;
+  transform: rotate(4deg);
 }
 
 .map-polaroid-photo.slot-3 {
-  top: 38%;
-  left: 31%;
+  top: 43%;
+  left: 6%;
   transform: rotate(5deg);
 }
 
 .map-polaroid-photo.slot-4 {
-  top: 58%;
-  right: 4%;
-  transform: rotate(-5deg);
+  top: 54%;
+  right: 5%;
+  transform: rotate(-4deg);
 }
 
 .map-polaroid-photo.slot-5 {
-  right: 32%;
-  bottom: 8%;
-  transform: rotate(4deg);
+  right: 35%;
+  bottom: 6%;
+  transform: rotate(3deg);
 }
 
 @keyframes map-photo-appear {
@@ -3071,38 +3105,56 @@ time {
   }
 
   .map-polaroid-photo {
-    width: clamp(68px, 18vw, 92px);
-    padding: 5px 5px 16px;
+    width: clamp(104px, 24vw, 124px);
+    padding: 6px 6px 31px;
     border-radius: 6px;
   }
 
+  .map-polaroid-photo.is-large {
+    width: clamp(122px, 30vw, 148px);
+  }
+
+  .map-polaroid-photo.is-medium {
+    width: clamp(108px, 26vw, 132px);
+  }
+
+  .map-polaroid-photo.is-small {
+    width: clamp(96px, 23vw, 116px);
+  }
+
   .map-polaroid-caption {
-    font-size: 0.6rem;
+    font-size: 0.62rem;
+  }
+
+  .map-polaroid-caption strong {
+    font-size: 0.68rem;
   }
 
   .map-polaroid-photo.slot-1 {
-    top: 13%;
-    right: 11%;
+    top: 22%;
+    left: 4%;
+    right: auto;
   }
 
   .map-polaroid-photo.slot-2 {
-    top: 28%;
-    left: 4%;
+    top: 15%;
+    right: 4%;
+    left: auto;
   }
 
   .map-polaroid-photo.slot-3 {
-    top: 38%;
-    left: 30%;
+    top: 43%;
+    left: 4%;
   }
 
   .map-polaroid-photo.slot-4 {
-    top: 58%;
+    top: 55%;
     right: 3%;
   }
 
   .map-polaroid-photo.slot-5 {
     right: 31%;
-    bottom: 8%;
+    bottom: 6%;
   }
 
   .wishlist-form {

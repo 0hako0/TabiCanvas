@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Camera } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 import { PREFECTURES } from '../data/prefectures';
 import type { PrefectureVisit, VisitPhoto } from '../types';
 
@@ -60,16 +60,27 @@ export function MapPhotoCollage({ visits, onOpenVisit }: Props) {
       {visiblePhotos.map((photo, index) => (
         <button
           key={`${photo.id}-${index}`}
-          className={`map-polaroid-photo slot-${index + 1}`}
+          className={`map-polaroid-photo slot-${index + 1} ${index === 0 || index === 4 ? 'is-large' : index === 3 ? 'is-small' : 'is-medium'}`}
           type="button"
           onClick={() => onOpenVisit(photo.visit)}
           aria-label={`${photo.prefectureName} ${photo.placeName}の思い出を見る`}
         >
           <span className="map-polaroid-tape" aria-hidden="true" />
-          <img src={photo.src} alt={`${photo.prefectureName} ${photo.placeName}の写真`} loading="lazy" decoding="async" />
+          <img
+            src={photo.src}
+            alt={`${photo.prefectureName} ${photo.placeName}の写真`}
+            loading="lazy"
+            decoding="async"
+            onError={(event) => {
+              event.currentTarget.closest('.map-polaroid-photo')?.setAttribute('hidden', 'true');
+            }}
+          />
           <span className="map-polaroid-caption">
-            <Camera size={11} />
-            {photo.prefectureName}
+            <span>
+              <MapPin size={11} />
+              {photo.prefectureName}
+            </span>
+            <strong>{photo.placeName}</strong>
           </span>
         </button>
       ))}
