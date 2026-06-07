@@ -1452,6 +1452,7 @@ textarea:focus {
 .map-photo-stage {
   position: relative;
   min-width: 0;
+  overflow: hidden;
 }
 
 .map-photo-stage > .map-card {
@@ -1461,8 +1462,9 @@ textarea:focus {
 
 .map-photo-collage {
   position: absolute;
-  inset: 0;
+  inset: 16px;
   z-index: 4;
+  overflow: hidden;
   pointer-events: none;
   opacity: 1;
   transition: opacity 220ms ease;
@@ -1474,7 +1476,9 @@ textarea:focus {
 
 .map-polaroid-photo {
   position: absolute;
+  box-sizing: border-box;
   width: clamp(88px, 11vw, 118px);
+  max-width: calc(100% - 32px);
   border: 0;
   border-radius: 7px;
   padding: 6px 6px 28px;
@@ -1539,8 +1543,7 @@ textarea:focus {
   white-space: normal;
 }
 
-.map-polaroid-caption span,
-.map-polaroid-caption strong {
+.map-polaroid-caption span {
   display: flex;
   max-width: 100%;
   align-items: center;
@@ -1552,8 +1555,15 @@ textarea:focus {
 }
 
 .map-polaroid-caption strong {
+  display: -webkit-box;
+  max-width: 100%;
+  overflow: hidden;
   color: #4b4138;
   font-size: 0.64rem;
+  text-align: center;
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .map-polaroid-tape {
@@ -1569,23 +1579,23 @@ textarea:focus {
 }
 
 .map-polaroid-photo.slot-1 {
-  top: 23%;
-  left: 7%;
+  top: 17%;
+  left: 18px;
   transform: rotate(-4deg);
 }
 
 .map-polaroid-photo.slot-2 {
-  top: 47%;
-  left: 8%;
+  top: 17%;
+  left: clamp(136px, 34%, 260px);
   right: auto;
   transform: rotate(3deg);
 }
 
 .map-polaroid-photo.slot-3 {
-  top: 34%;
-  right: 26%;
+  right: 22px;
+  bottom: 16%;
   left: auto;
-  bottom: auto;
+  top: auto;
   transform: rotate(-2deg);
 }
 
@@ -3250,22 +3260,22 @@ time {
   }
 
   .map-polaroid-photo.slot-1 {
-    top: 23%;
-    left: 7%;
+    top: 17%;
+    left: 18px;
     right: auto;
   }
 
   .map-polaroid-photo.slot-2 {
-    top: 47%;
-    left: 8%;
+    top: 17%;
+    left: clamp(128px, 34%, 210px);
     right: auto;
   }
 
   .map-polaroid-photo.slot-3 {
-    top: 34%;
-    right: 20%;
-    bottom: auto;
+    right: 20px;
+    bottom: 15%;
     left: auto;
+    top: auto;
   }
 
   .map-polaroid-photo.slot-4 {

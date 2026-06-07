@@ -165,7 +165,7 @@ export default function App() {
     void loadMapCollagePhotos(couple.id, { excludePrevious: true });
     const timer = window.setInterval(() => {
       void loadMapCollagePhotos(couple.id, { animated: true, excludePrevious: true });
-    }, 30_000);
+    }, 15_000);
     return () => window.clearInterval(timer);
   }, [couple?.id, activeMobileView]);
 
