@@ -1584,7 +1584,7 @@ textarea:focus {
 }
 
 .map-polaroid-photo.slot-2 {
-  top: 17%;
+  top: 14.5%;
   left: clamp(136px, 34%, 260px);
   right: auto;
   transform: rotate(3deg);
@@ -3265,7 +3265,7 @@ time {
   }
 
   .map-polaroid-photo.slot-2 {
-    top: 17%;
+    top: 14.5%;
     left: clamp(128px, 34%, 210px);
     right: auto;
   }
