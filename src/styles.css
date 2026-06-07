@@ -1464,6 +1464,12 @@ textarea:focus {
   inset: 0;
   z-index: 4;
   pointer-events: none;
+  opacity: 1;
+  transition: opacity 220ms ease;
+}
+
+.map-photo-collage.is-refreshing {
+  opacity: 0.08;
 }
 
 .map-polaroid-photo {
@@ -1489,16 +1495,12 @@ textarea:focus {
   display: none;
 }
 
-.map-polaroid-photo.is-large {
-  width: clamp(102px, 12.75vw, 132px);
-}
-
 .map-polaroid-photo.is-medium {
-  width: clamp(88px, 11vw, 112px);
+  width: clamp(100px, 12.6vw, 128px);
 }
 
 .map-polaroid-photo.is-small {
-  width: clamp(78px, 9.75vw, 100px);
+  width: clamp(88px, 11vw, 114px);
 }
 
 .map-polaroid-photo:hover,
@@ -1567,23 +1569,24 @@ textarea:focus {
 }
 
 .map-polaroid-photo.slot-1 {
-  top: 24%;
-  left: 4%;
+  top: 23%;
+  left: 7%;
   transform: rotate(-4deg);
 }
 
 .map-polaroid-photo.slot-2 {
-  top: 45%;
-  left: 5%;
+  top: 47%;
+  left: 8%;
   right: auto;
   transform: rotate(3deg);
 }
 
 .map-polaroid-photo.slot-3 {
-  right: 24%;
-  bottom: 6%;
+  top: 34%;
+  right: 26%;
   left: auto;
-  transform: rotate(3deg);
+  bottom: auto;
+  transform: rotate(-2deg);
 }
 
 .map-polaroid-photo.slot-4 {
@@ -3230,16 +3233,12 @@ time {
     border-radius: 6px;
   }
 
-  .map-polaroid-photo.is-large {
-    width: clamp(90px, 22vw, 112px);
-  }
-
   .map-polaroid-photo.is-medium {
-    width: clamp(82px, 19.5vw, 100px);
+    width: clamp(94px, 22.5vw, 112px);
   }
 
   .map-polaroid-photo.is-small {
-    width: clamp(70px, 16vw, 86px);
+    width: clamp(80px, 18.5vw, 98px);
   }
 
   .map-polaroid-caption {
@@ -3251,22 +3250,22 @@ time {
   }
 
   .map-polaroid-photo.slot-1 {
-    top: 24%;
-    left: 5%;
+    top: 23%;
+    left: 7%;
     right: auto;
   }
 
   .map-polaroid-photo.slot-2 {
-    top: 45%;
-    left: 5%;
+    top: 47%;
+    left: 8%;
     right: auto;
   }
 
   .map-polaroid-photo.slot-3 {
-    right: 22%;
-    bottom: 6%;
+    top: 34%;
+    right: 20%;
+    bottom: auto;
     left: auto;
-    top: auto;
   }
 
   .map-polaroid-photo.slot-4 {

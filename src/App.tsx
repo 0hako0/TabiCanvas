@@ -1,4 +1,4 @@
-import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from 'react';
+import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Award,
   Bell,
@@ -43,6 +43,26 @@ import type {
   WishlistFormState,
   WishlistItem,
 } from './types';
+
+type MapCollagePhotoRow = {
+  photo_id: string;
+  visit_id: string;
+  couple_id: string;
+  storage_path: string;
+  public_url: string | null;
+  original_url: string | null;
+  thumbnail_url: string | null;
+  original_storage_path: string | null;
+  thumbnail_storage_path: string | null;
+  caption: string | null;
+  prefecture_id: number;
+  visited_on: string;
+  place_name: string;
+  memo: string | null;
+  nights: number;
+  tags: string[];
+  visit_created_at: string;
+};
 
 const defaultForm: VisitFormState = {
   visited_on: new Date().toISOString().slice(0, 10),
@@ -98,6 +118,8 @@ export default function App() {
   const [userSettings, setUserSettings] = useState<UserSettings | null>(null);
   const [nickname, setNickname] = useState('');
   const [visits, setVisits] = useState<PrefectureVisit[]>([]);
+  const [mapCollageVisits, setMapCollageVisits] = useState<PrefectureVisit[]>([]);
+  const [isMapCollageRefreshing, setIsMapCollageRefreshing] = useState(false);
   const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([]);
   const [selectedPrefecture, setSelected] = useState<Prefecture | null>(null);
   const [hoveredPrefecture, setHoveredPrefecture] = useState<Prefecture | null>(null);
@@ -116,6 +138,7 @@ export default function App() {
   const [message, setMessage] = useState('');
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isAccountManagementOpen, setIsAccountManagementOpen] = useState(false);
+  const mapCollagePhotoIdsRef = useRef<string[]>([]);
 
   useEffect(() => {
     if (!isSupabaseConfigured) {
@@ -136,6 +159,15 @@ export default function App() {
     if (!session) return;
     loadCoupleAndVisits();
   }, [session]);
+
+  useEffect(() => {
+    if (!couple?.id || activeMobileView !== 'map') return undefined;
+    void loadMapCollagePhotos(couple.id, { excludePrevious: true });
+    const timer = window.setInterval(() => {
+      void loadMapCollagePhotos(couple.id, { animated: true, excludePrevious: true });
+    }, 30_000);
+    return () => window.clearInterval(timer);
+  }, [couple?.id, activeMobileView]);
 
   async function loadCoupleAndVisits() {
     setLoading(true);
@@ -187,6 +219,7 @@ export default function App() {
         .order('visited_on', { ascending: false });
       if (error) setMessage(error.message);
       setVisits(await attachSignedPhotoUrls((data as PrefectureVisit[] | null) ?? []));
+      await loadMapCollagePhotos(member.couple_id);
 
       const { data: wishlist, error: wishlistError } = await supabase
         .from('wishlist')
@@ -209,6 +242,7 @@ export default function App() {
       }
     } else {
       setMemberIds([]);
+      setMapCollageVisits([]);
       setNotifications([]);
     }
     setLoading(false);
@@ -464,41 +498,135 @@ export default function App() {
     return uploadedCount;
   }
 
-  async function createPhotoSignedUrl(pathOrUrl?: string | null) {
-    if (!pathOrUrl) return null;
-    if (/^https?:\/\//.test(pathOrUrl)) return pathOrUrl;
-    const cachedUrl = photoSignedUrlCache.get(pathOrUrl);
-    if (cachedUrl && cachedUrl.expiresAt > Date.now()) return cachedUrl.url;
-    const { data } = await supabase.storage.from('travel-photos').createSignedUrl(pathOrUrl, 60 * 60);
-    if (data?.signedUrl) {
-      photoSignedUrlCache.set(pathOrUrl, {
-        url: data.signedUrl,
-        expiresAt: Date.now() + SIGNED_PHOTO_URL_TTL_MS,
+  async function createPhotoSignedUrlMap(pathsOrUrls: Array<string | null | undefined>) {
+    const urlMap = new Map<string, string | null>();
+    const storagePaths = [
+      ...new Set(
+        pathsOrUrls
+          .filter((pathOrUrl): pathOrUrl is string => Boolean(pathOrUrl))
+          .filter((pathOrUrl) => {
+            if (/^https?:\/\//.test(pathOrUrl)) {
+              urlMap.set(pathOrUrl, pathOrUrl);
+              return false;
+            }
+            const cachedUrl = photoSignedUrlCache.get(pathOrUrl);
+            if (cachedUrl && cachedUrl.expiresAt > Date.now()) {
+              urlMap.set(pathOrUrl, cachedUrl.url);
+              return false;
+            }
+            return true;
+          }),
+      ),
+    ];
+
+    for (let index = 0; index < storagePaths.length; index += 100) {
+      const chunk = storagePaths.slice(index, index + 100);
+      const { data } = await supabase.storage.from('travel-photos').createSignedUrls(chunk, 60 * 60);
+      data?.forEach((item) => {
+        if (!item.path || !item.signedUrl) return;
+        photoSignedUrlCache.set(item.path, {
+          url: item.signedUrl,
+          expiresAt: Date.now() + SIGNED_PHOTO_URL_TTL_MS,
+        });
+        urlMap.set(item.path, item.signedUrl);
       });
-      return data.signedUrl;
     }
-    return null;
+
+    storagePaths.forEach((path) => {
+      if (!urlMap.has(path)) urlMap.set(path, null);
+    });
+    return urlMap;
   }
 
   async function attachSignedPhotoUrls(nextVisits: PrefectureVisit[]) {
-    return Promise.all(
-      nextVisits.map(async (visit) => ({
-        ...visit,
-        photos: await Promise.all(
-          (visit.photos ?? []).map(async (photo) => {
-            const originalPath = photo.original_storage_path ?? photo.storage_path ?? photo.original_url;
-            const thumbnailPath = photo.thumbnail_storage_path ?? photo.thumbnail_url;
-            const displayUrl = await createPhotoSignedUrl(thumbnailPath ?? originalPath);
-            return {
-              ...photo,
+    const displayPaths = nextVisits.flatMap((visit) =>
+      (visit.photos ?? []).map((photo) => photo.thumbnail_storage_path ?? photo.thumbnail_url ?? photo.original_storage_path ?? photo.storage_path ?? photo.original_url),
+    );
+    const signedUrlMap = await createPhotoSignedUrlMap(displayPaths);
+    return nextVisits.map((visit) => ({
+      ...visit,
+      photos: (visit.photos ?? []).map((photo) => {
+        const originalPath = photo.original_storage_path ?? photo.storage_path ?? photo.original_url;
+        const thumbnailPath = photo.thumbnail_storage_path ?? photo.thumbnail_url;
+        const displayPath = thumbnailPath ?? originalPath;
+        const displayUrl = displayPath ? signedUrlMap.get(displayPath) ?? null : null;
+        return {
+          ...photo,
+          public_url: displayUrl,
+          thumbnail_url: displayUrl,
+          original_url: /^https?:\/\//.test(photo.original_url ?? '') ? photo.original_url : null,
+        };
+      }),
+    }));
+  }
+
+  async function loadMapCollagePhotos(coupleId: string, options: { animated?: boolean; excludePrevious?: boolean } = {}) {
+    if (options.animated) {
+      setIsMapCollageRefreshing(true);
+      await new Promise((resolve) => window.setTimeout(resolve, 180));
+    }
+
+    const excludedIds = options.excludePrevious ? mapCollagePhotoIdsRef.current : [];
+    let { data, error } = await supabase.rpc('get_random_map_collage_photos', {
+      target_couple_id: coupleId,
+      max_count: 3,
+      exclude_photo_ids: excludedIds,
+    });
+
+    if (!error && (!data || data.length === 0) && excludedIds.length > 0) {
+      const retry = await supabase.rpc('get_random_map_collage_photos', {
+        target_couple_id: coupleId,
+        max_count: 3,
+        exclude_photo_ids: [],
+      });
+      data = retry.data;
+      error = retry.error;
+    }
+
+    if (error) {
+      setMessage(error.message);
+      setMapCollageVisits([]);
+      setIsMapCollageRefreshing(false);
+      return;
+    }
+
+    const rows = (data as MapCollagePhotoRow[] | null) ?? [];
+    const displayPaths = rows.map((photo) => photo.thumbnail_storage_path ?? photo.thumbnail_url ?? photo.original_storage_path ?? photo.storage_path ?? photo.original_url);
+    const signedUrlMap = await createPhotoSignedUrlMap(displayPaths);
+    const collageVisits = rows
+      .map((photo) => {
+        const displayPath = photo.thumbnail_storage_path ?? photo.thumbnail_url ?? photo.original_storage_path ?? photo.storage_path ?? photo.original_url;
+        const displayUrl = displayPath ? signedUrlMap.get(displayPath) ?? null : null;
+        return {
+          id: photo.visit_id,
+          couple_id: photo.couple_id,
+          prefecture_id: photo.prefecture_id,
+          visited_on: photo.visited_on,
+          place_name: photo.place_name,
+          memo: photo.memo,
+          nights: photo.nights,
+          tags: photo.tags ?? [],
+          created_at: photo.visit_created_at,
+          photos: [
+            {
+              id: photo.photo_id,
+              visit_id: photo.visit_id,
+              storage_path: photo.storage_path,
+              caption: photo.caption,
               public_url: displayUrl,
               thumbnail_url: displayUrl,
               original_url: /^https?:\/\//.test(photo.original_url ?? '') ? photo.original_url : null,
-            };
-          }),
-        ),
-      })),
-    );
+              original_storage_path: photo.original_storage_path,
+              thumbnail_storage_path: photo.thumbnail_storage_path,
+            },
+          ],
+        } satisfies PrefectureVisit;
+      })
+      .filter((visit) => visit.photos?.[0]?.public_url);
+
+    mapCollagePhotoIdsRef.current = collageVisits.flatMap((visit) => visit.photos?.map((photo) => photo.id) ?? []);
+    setMapCollageVisits(collageVisits);
+    setIsMapCollageRefreshing(false);
   }
 
   async function deleteVisit(visitId: string) {
@@ -1161,7 +1289,7 @@ export default function App() {
               wishlistIds={wishlistIds}
               onSelect={handlePrefectureSelect}
             />
-            <MapPhotoCollage visits={visits} onOpenVisit={openVisitFromMapPhoto} />
+            <MapPhotoCollage visits={mapCollageVisits} isRefreshing={isMapCollageRefreshing} onOpenVisit={openVisitFromMapPhoto} />
           </div>
         </section>
       </section>

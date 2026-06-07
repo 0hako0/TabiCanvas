@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { MapPin } from 'lucide-react';
 import { PREFECTURES } from '../data/prefectures';
 import type { PrefectureVisit, VisitPhoto } from '../types';
@@ -13,6 +13,7 @@ type CollagePhoto = {
 
 type Props = {
   visits: PrefectureVisit[];
+  isRefreshing?: boolean;
   onOpenVisit: (visit: PrefectureVisit) => void;
 };
 
@@ -20,8 +21,7 @@ function getPhotoSrc(photo: VisitPhoto) {
   return photo.thumbnail_url ?? photo.public_url ?? photo.original_url ?? '';
 }
 
-export function MapPhotoCollage({ visits, onOpenVisit }: Props) {
-  const [slideIndex, setSlideIndex] = useState(0);
+export function MapPhotoCollage({ visits, isRefreshing = false, onOpenVisit }: Props) {
   const photos = useMemo<CollagePhoto[]>(() => {
     return visits
       .flatMap((visit) => {
@@ -35,30 +35,17 @@ export function MapPhotoCollage({ visits, onOpenVisit }: Props) {
         }));
       })
       .filter((photo) => photo.src)
-      .slice(0, 12);
+      .slice(0, 3);
   }, [visits]);
 
-  useEffect(() => {
-    if (photos.length <= 3) return undefined;
-    const timer = window.setInterval(() => {
-      setSlideIndex((current) => (current + 1) % photos.length);
-    }, 5600);
-    return () => window.clearInterval(timer);
-  }, [photos.length]);
-
-  const visiblePhotos = useMemo(() => {
-    if (photos.length <= 3) return photos;
-    return Array.from({ length: 3 }, (_, index) => photos[(slideIndex + index) % photos.length]);
-  }, [photos, slideIndex]);
-
-  if (visiblePhotos.length === 0) return null;
+  if (photos.length === 0) return null;
 
   return (
-    <div className="map-photo-collage" aria-label="地図の写真アルバム">
-      {visiblePhotos.map((photo, index) => (
+    <div className={`map-photo-collage ${isRefreshing ? 'is-refreshing' : ''}`} aria-label="地図の写真アルバム">
+      {photos.map((photo, index) => (
         <button
           key={`${photo.id}-${index}`}
-          className={`map-polaroid-photo slot-${index + 1} ${index === 1 ? 'is-small' : 'is-medium'}`}
+          className={`map-polaroid-photo slot-${index + 1} ${index === 2 ? 'is-small' : 'is-medium'}`}
           type="button"
           onClick={() => onOpenVisit(photo.visit)}
           aria-label={`${photo.prefectureName} ${photo.placeName}の思い出を見る`}
@@ -67,6 +54,8 @@ export function MapPhotoCollage({ visits, onOpenVisit }: Props) {
           <img
             src={photo.src}
             alt={`${photo.prefectureName} ${photo.placeName}の写真`}
+            width={160}
+            height={125}
             loading="lazy"
             decoding="async"
             onError={(event) => {

@@ -10,8 +10,20 @@ Deno.serve(async (req) => {
 
     await notifyOtherMembers(supabase, user.id, `${nickname}さんがTabiCanvasを退会しました`, 'アカウントと本人が作成したデータが削除されました。');
 
-    const { data: ownPhotos } = await supabase.from('photos').select('storage_path').eq('created_by', user.id);
-    const paths = (ownPhotos ?? []).map((photo) => photo.storage_path as string);
+    const { data: ownPhotos } = await supabase
+      .from('photos')
+      .select('storage_path, original_storage_path, thumbnail_storage_path, thumbnail_url')
+      .eq('created_by', user.id);
+    const paths = [
+      ...new Set(
+        (ownPhotos ?? []).flatMap((photo) => [
+          photo.storage_path,
+          photo.original_storage_path,
+          photo.thumbnail_storage_path,
+          photo.thumbnail_url && !/^https?:\/\//.test(photo.thumbnail_url) ? photo.thumbnail_url : null,
+        ]).filter(Boolean) as string[],
+      ),
+    ];
     if (paths.length > 0) {
       await supabase.storage.from('travel-photos').remove(paths);
     }

@@ -213,6 +213,64 @@ as '
   on conflict (couple_id, user_id) do nothing;
 ';
 
+create or replace function public.get_random_map_collage_photos(
+  target_couple_id uuid,
+  max_count integer default 3,
+  exclude_photo_ids uuid[] default '{}'
+)
+returns table (
+  photo_id uuid,
+  visit_id uuid,
+  couple_id uuid,
+  storage_path text,
+  public_url text,
+  original_url text,
+  thumbnail_url text,
+  original_storage_path text,
+  thumbnail_storage_path text,
+  caption text,
+  prefecture_id integer,
+  visited_on date,
+  place_name text,
+  memo text,
+  nights integer,
+  tags text[],
+  visit_created_at timestamptz
+)
+language sql
+security definer
+set search_path = public
+as '
+  select
+    p.id as photo_id,
+    p.visit_id,
+    p.couple_id,
+    p.storage_path,
+    p.public_url,
+    p.original_url,
+    p.thumbnail_url,
+    p.original_storage_path,
+    p.thumbnail_storage_path,
+    p.caption,
+    v.prefecture_id,
+    v.visited_on,
+    v.place_name,
+    v.memo,
+    v.nights,
+    v.tags,
+    v.created_at as visit_created_at
+  from public.photos p
+  join public.prefecture_visits v on v.id = p.visit_id
+  where p.couple_id = target_couple_id
+    and v.couple_id = target_couple_id
+    and public.is_couple_member(target_couple_id)
+    and p.id <> all(coalesce(exclude_photo_ids, ''{}''::uuid[]))
+  order by random()
+  limit greatest(0, least(coalesce(max_count, 3), 3));
+';
+
+grant execute on function public.get_random_map_collage_photos(uuid, integer, uuid[]) to authenticated;
+
 alter table public.couples enable row level security;
 alter table public.couple_members enable row level security;
 alter table public.profiles enable row level security;

@@ -165,3 +165,23 @@ supabase functions deploy account-delete
 ```
 
 Edge Functionsは `SUPABASE_SERVICE_ROLE_KEY` を使ってサーバー側で本人確認と削除処理を行います。Service Role Keyはフロントエンドの環境変数には絶対に入れないでください。
+## Existing photo thumbnail migration
+
+New uploads create lightweight WebP thumbnails automatically. For photos uploaded before thumbnail support, run this one-time script from the project root after confirming `supabase/schema.sql` has been applied.
+
+PowerShell:
+
+```powershell
+$env:SUPABASE_SERVICE_ROLE_KEY="your-service-role-key"
+npm run photos:thumbnails
+Remove-Item Env:\SUPABASE_SERVICE_ROLE_KEY
+```
+
+Notes:
+
+- Do not put `SUPABASE_SERVICE_ROLE_KEY` in Vercel or frontend `.env` files.
+- The script reads `VITE_SUPABASE_URL` from `.env.local`.
+- It targets photos where `thumbnail_url` or `thumbnail_storage_path` is missing.
+- It creates `travel-photos/{couple_id}/{visit_id}/thumbnails/{photo_id}.webp`.
+- Failed photos are logged and the script continues with the next photo.
+- If more than 5000 old photos exist, run the script again until `created` becomes `0`.
