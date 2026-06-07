@@ -68,6 +68,9 @@ const NO_PREFECTURE_SELECTED: Prefecture = {
   y: 0,
 };
 
+const SIGNED_PHOTO_URL_TTL_MS = 55 * 60 * 1000;
+const photoSignedUrlCache = new Map<string, { url: string; expiresAt: number }>();
+
 function getPhotoDisplayUrl(photo?: VisitPhoto | null) {
   if (!photo) return '';
   return photo.thumbnail_url ?? photo.public_url ?? photo.original_url ?? '';
@@ -464,8 +467,17 @@ export default function App() {
   async function createPhotoSignedUrl(pathOrUrl?: string | null) {
     if (!pathOrUrl) return null;
     if (/^https?:\/\//.test(pathOrUrl)) return pathOrUrl;
+    const cachedUrl = photoSignedUrlCache.get(pathOrUrl);
+    if (cachedUrl && cachedUrl.expiresAt > Date.now()) return cachedUrl.url;
     const { data } = await supabase.storage.from('travel-photos').createSignedUrl(pathOrUrl, 60 * 60);
-    return data?.signedUrl ?? null;
+    if (data?.signedUrl) {
+      photoSignedUrlCache.set(pathOrUrl, {
+        url: data.signedUrl,
+        expiresAt: Date.now() + SIGNED_PHOTO_URL_TTL_MS,
+      });
+      return data.signedUrl;
+    }
+    return null;
   }
 
   async function attachSignedPhotoUrls(nextVisits: PrefectureVisit[]) {
@@ -476,15 +488,12 @@ export default function App() {
           (visit.photos ?? []).map(async (photo) => {
             const originalPath = photo.original_storage_path ?? photo.storage_path ?? photo.original_url;
             const thumbnailPath = photo.thumbnail_storage_path ?? photo.thumbnail_url;
-            const [thumbnailUrl, originalUrl] = await Promise.all([
-              createPhotoSignedUrl(thumbnailPath),
-              createPhotoSignedUrl(originalPath),
-            ]);
+            const displayUrl = await createPhotoSignedUrl(thumbnailPath ?? originalPath);
             return {
               ...photo,
-              public_url: thumbnailUrl ?? originalUrl,
-              thumbnail_url: thumbnailUrl ?? originalUrl,
-              original_url: originalUrl ?? thumbnailUrl,
+              public_url: displayUrl,
+              thumbnail_url: displayUrl,
+              original_url: /^https?:\/\//.test(photo.original_url ?? '') ? photo.original_url : null,
             };
           }),
         ),

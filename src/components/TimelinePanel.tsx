@@ -19,7 +19,8 @@ function getPhotoThumb(photo: VisitPhoto) {
 }
 
 function getPhotoOriginal(photo: VisitPhoto) {
-  return photo.original_url ?? photo.public_url ?? photo.thumbnail_url ?? '';
+  const originalUrl = photo.original_url && /^https?:\/\//.test(photo.original_url) ? photo.original_url : null;
+  return originalUrl ?? photo.public_url ?? photo.thumbnail_url ?? '';
 }
 
 export function TimelinePanel({

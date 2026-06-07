@@ -1573,14 +1573,15 @@ textarea:focus {
 }
 
 .map-polaroid-photo.slot-2 {
-  top: 15%;
-  right: 4%;
+  top: 45%;
+  left: 5%;
+  right: auto;
   transform: rotate(3deg);
 }
 
 .map-polaroid-photo.slot-3 {
-  right: 36%;
-  bottom: 7%;
+  right: 24%;
+  bottom: 6%;
   left: auto;
   transform: rotate(3deg);
 }
@@ -3256,13 +3257,13 @@ time {
   }
 
   .map-polaroid-photo.slot-2 {
-    top: 16%;
-    right: 5%;
-    left: auto;
+    top: 45%;
+    left: 5%;
+    right: auto;
   }
 
   .map-polaroid-photo.slot-3 {
-    right: 35%;
+    right: 22%;
     bottom: 6%;
     left: auto;
     top: auto;
