@@ -29,6 +29,8 @@ export type VisitPhoto = {
   public_url: string | null;
   thumbnail_url?: string | null;
   original_url?: string | null;
+  thumbnail_storage_path?: string | null;
+  original_storage_path?: string | null;
   caption: string | null;
 };
 

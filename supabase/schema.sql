@@ -72,10 +72,20 @@ create table if not exists public.photos (
   visit_id uuid not null references public.prefecture_visits(id) on delete cascade,
   storage_path text not null unique,
   public_url text,
+  original_url text,
+  thumbnail_url text,
+  original_storage_path text,
+  thumbnail_storage_path text,
   caption text,
   created_by uuid default auth.uid() references auth.users(id) on delete set null,
   created_at timestamptz not null default now()
 );
+
+alter table public.photos
+add column if not exists original_url text,
+add column if not exists thumbnail_url text,
+add column if not exists original_storage_path text,
+add column if not exists thumbnail_storage_path text;
 
 create table if not exists public.visit_comments (
   id uuid primary key default gen_random_uuid(),

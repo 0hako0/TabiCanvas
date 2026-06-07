@@ -1,7 +1,7 @@
 import { FormEvent, useEffect, useState } from 'react';
-import { Clock, MessageCircle, Pencil, Trash2 } from 'lucide-react';
+import { Clock, Image as ImageIcon, MessageCircle, Pencil, Trash2, X } from 'lucide-react';
 import { PREFECTURES } from '../data/prefectures';
-import type { Prefecture, PrefectureVisit, Profile } from '../types';
+import type { Prefecture, PrefectureVisit, Profile, VisitPhoto } from '../types';
 
 type Props = {
   visits: PrefectureVisit[];
@@ -13,6 +13,14 @@ type Props = {
   onSaveComment: (visit: PrefectureVisit, body: string) => void;
   onDeleteComment: (commentId: string) => void;
 };
+
+function getPhotoThumb(photo: VisitPhoto) {
+  return photo.thumbnail_url ?? photo.public_url ?? photo.original_url ?? '';
+}
+
+function getPhotoOriginal(photo: VisitPhoto) {
+  return photo.original_url ?? photo.public_url ?? photo.thumbnail_url ?? '';
+}
 
 export function TimelinePanel({
   visits,
@@ -93,6 +101,7 @@ function TimelineCard({
   onDeleteComment,
 }: CardProps) {
   const [commentBody, setCommentBody] = useState('');
+  const [previewPhoto, setPreviewPhoto] = useState<VisitPhoto | null>(null);
   const prefectureName = PREFECTURES.find((prefecture) => prefecture.id === visit.prefecture_id)?.name;
   const profileById = new Map(profiles.map((profile) => [profile.user_id, profile]));
   const comments = [...(visit.visit_comments ?? [])].sort(
@@ -122,15 +131,23 @@ function TimelineCard({
           </button>
         </div>
       </div>
+
       {visit.photos?.length ? (
-        <div className="photo-grid compact">
-          {visit.photos.slice(0, 3).map((photo) => (
-            <figure key={photo.id}>
-              <img src={photo.public_url ?? ''} alt={`${visit.place_name}の写真`} />
-            </figure>
-          ))}
+        <div className="photo-strip-wrap">
+          <div className="photo-count-badge">
+            <ImageIcon size={14} />
+            {visit.photos.length}枚
+          </div>
+          <div className="photo-strip" aria-label={`${visit.place_name}の写真`}>
+            {visit.photos.map((photo) => (
+              <button key={photo.id} type="button" className="photo-strip-item" onClick={() => setPreviewPhoto(photo)}>
+                <img src={getPhotoThumb(photo)} alt={`${visit.place_name}の写真`} loading="lazy" decoding="async" />
+              </button>
+            ))}
+          </div>
         </div>
       ) : null}
+
       {visit.memo && <p>{visit.memo}</p>}
       <div className="tag-row">
         {visit.tags.map((tag) => (
@@ -182,6 +199,21 @@ function TimelineCard({
           <button className="secondary-button">送信</button>
         </form>
       </div>
+
+      {previewPhoto && (
+        <div className="photo-lightbox" role="dialog" aria-modal="true" aria-label="写真を拡大表示" onClick={() => setPreviewPhoto(null)}>
+          <button className="icon-button small" aria-label="閉じる" onClick={() => setPreviewPhoto(null)}>
+            <X size={16} />
+          </button>
+          <img
+            src={getPhotoOriginal(previewPhoto)}
+            alt={`${visit.place_name}の写真`}
+            loading="eager"
+            decoding="async"
+            onClick={(event) => event.stopPropagation()}
+          />
+        </div>
+      )}
     </article>
   );
 }

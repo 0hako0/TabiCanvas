@@ -1,7 +1,6 @@
-const TARGET_MAX_BYTES = 800 * 1024;
 const TARGET_MIN_QUALITY = 0.58;
 
-export async function resizeImage(file: File, maxSize = 1440, quality = 0.78): Promise<Blob> {
+export async function resizeImage(file: File, maxSize = 1600, quality = 0.78, targetMaxBytes = 800 * 1024): Promise<Blob> {
   const image = await loadImage(file);
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
@@ -19,7 +18,7 @@ export async function resizeImage(file: File, maxSize = 1440, quality = 0.78): P
     ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
 
     const blob = await canvasToBlob(canvas, 'image/webp', currentQuality);
-    if (blob.size <= TARGET_MAX_BYTES || currentQuality <= TARGET_MIN_QUALITY) {
+    if (blob.size <= targetMaxBytes || currentQuality <= TARGET_MIN_QUALITY) {
       return blob;
     }
     currentQuality = Math.max(TARGET_MIN_QUALITY, currentQuality - 0.08);
@@ -27,6 +26,10 @@ export async function resizeImage(file: File, maxSize = 1440, quality = 0.78): P
   }
 
   return canvasToBlob(canvas, 'image/webp', TARGET_MIN_QUALITY);
+}
+
+export function resizeThumbnail(file: File): Promise<Blob> {
+  return resizeImage(file, 560, 0.72, 220 * 1024);
 }
 
 function loadImage(file: File): Promise<HTMLImageElement> {

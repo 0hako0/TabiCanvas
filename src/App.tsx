@@ -29,7 +29,7 @@ import { StatsPanel } from './components/StatsPanel';
 import { TimelinePanel } from './components/TimelinePanel';
 import { WishlistPanel } from './components/WishlistPanel';
 import { PREFECTURES, REGIONS } from './data/prefectures';
-import { resizeImage } from './lib/image';
+import { resizeImage, resizeThumbnail } from './lib/image';
 import { isSupabaseConfigured, supabase } from './lib/supabase';
 import type {
   AppNotification,
@@ -67,6 +67,11 @@ const NO_PREFECTURE_SELECTED: Prefecture = {
   x: 0,
   y: 0,
 };
+
+function getPhotoDisplayUrl(photo?: VisitPhoto | null) {
+  if (!photo) return '';
+  return photo.thumbnail_url ?? photo.public_url ?? photo.original_url ?? '';
+}
 
 function resetMobileZoom() {
   const viewport = document.querySelector<HTMLMetaElement>('meta[name="viewport"]');
@@ -216,6 +221,9 @@ export default function App() {
   const selected = selectedPrefecture ?? NO_PREFECTURE_SELECTED;
   const selectedVisits = selectedPrefecture ? visits.filter((visit) => visit.prefecture_id === selectedPrefecture.id) : [];
   const selectedWishlistItems = selectedPrefecture ? wishlistItems.filter((item) => item.prefecture_id === selectedPrefecture.id) : [];
+  const selectedSheetPhotos = selectedVisits
+    .flatMap((visit) => (visit.photos ?? []).map((photo) => ({ photo, visit })))
+    .slice(0, 8);
   const desktopPreviewPrefecture = hoveredPrefecture ?? selectedPrefecture;
   const desktopPreviewVisits = desktopPreviewPrefecture
     ? visits.filter((visit) => visit.prefecture_id === desktopPreviewPrefecture.id)
@@ -417,19 +425,32 @@ export default function App() {
     if (!couple) return 0;
     let uploadedCount = 0;
     for (const file of Array.from(uploadFiles)) {
-      const compressed = await resizeImage(file);
-      const path = `${couple.id}/${visitId}/${crypto.randomUUID()}.webp`;
-      const { error: uploadError } = await supabase.storage.from('travel-photos').upload(path, compressed, {
+      const photoId = crypto.randomUUID();
+      const compressed = await resizeImage(file, 1600, 0.78, 800 * 1024);
+      const thumbnail = await resizeThumbnail(file);
+      const originalPath = `${couple.id}/${visitId}/originals/${photoId}.webp`;
+      const thumbnailPath = `${couple.id}/${visitId}/thumbnails/${photoId}.webp`;
+      const { error: uploadError } = await supabase.storage.from('travel-photos').upload(originalPath, compressed, {
         contentType: 'image/webp',
       });
       if (uploadError) {
         setMessage(uploadError.message);
         continue;
       }
+      const { error: thumbnailUploadError } = await supabase.storage.from('travel-photos').upload(thumbnailPath, thumbnail, {
+        contentType: 'image/webp',
+      });
+      if (thumbnailUploadError) {
+        setMessage(thumbnailUploadError.message);
+      }
       const { error: photoError } = await supabase.from('photos').insert({
         couple_id: couple.id,
         visit_id: visitId,
-        storage_path: path,
+        storage_path: originalPath,
+        original_url: originalPath,
+        thumbnail_url: thumbnailUploadError ? null : thumbnailPath,
+        original_storage_path: originalPath,
+        thumbnail_storage_path: thumbnailUploadError ? null : thumbnailPath,
       });
       if (photoError) {
         setMessage(photoError.message);
@@ -440,16 +461,31 @@ export default function App() {
     return uploadedCount;
   }
 
+  async function createPhotoSignedUrl(pathOrUrl?: string | null) {
+    if (!pathOrUrl) return null;
+    if (/^https?:\/\//.test(pathOrUrl)) return pathOrUrl;
+    const { data } = await supabase.storage.from('travel-photos').createSignedUrl(pathOrUrl, 60 * 60);
+    return data?.signedUrl ?? null;
+  }
+
   async function attachSignedPhotoUrls(nextVisits: PrefectureVisit[]) {
     return Promise.all(
       nextVisits.map(async (visit) => ({
         ...visit,
         photos: await Promise.all(
           (visit.photos ?? []).map(async (photo) => {
-            const { data } = await supabase.storage
-              .from('travel-photos')
-              .createSignedUrl(photo.storage_path, 60 * 60);
-            return { ...photo, public_url: data?.signedUrl ?? null };
+            const originalPath = photo.original_storage_path ?? photo.storage_path ?? photo.original_url;
+            const thumbnailPath = photo.thumbnail_storage_path ?? photo.thumbnail_url;
+            const [thumbnailUrl, originalUrl] = await Promise.all([
+              createPhotoSignedUrl(thumbnailPath),
+              createPhotoSignedUrl(originalPath),
+            ]);
+            return {
+              ...photo,
+              public_url: thumbnailUrl ?? originalUrl,
+              thumbnail_url: thumbnailUrl ?? originalUrl,
+              original_url: originalUrl ?? thumbnailUrl,
+            };
           }),
         ),
       })),
@@ -465,7 +501,14 @@ export default function App() {
 
   async function deletePhoto(photo: VisitPhoto) {
     if (!confirm('この写真を削除しますか？')) return;
-    await supabase.storage.from('travel-photos').remove([photo.storage_path]);
+    const paths = [
+      photo.storage_path,
+      photo.original_storage_path,
+      photo.thumbnail_storage_path,
+      photo.original_url && !/^https?:\/\//.test(photo.original_url) ? photo.original_url : null,
+      photo.thumbnail_url && !/^https?:\/\//.test(photo.thumbnail_url) ? photo.thumbnail_url : null,
+    ].filter(Boolean) as string[];
+    await supabase.storage.from('travel-photos').remove([...new Set(paths)]);
     await supabase.from('photos').delete().eq('id', photo.id);
     await loadCoupleAndVisits();
   }
@@ -829,7 +872,15 @@ export default function App() {
               </div>
               <div className="desktop-hover-photos">
                 {selectedPreviewPhotos.length ? (
-                  selectedPreviewPhotos.map((photo) => <img key={photo.id} src={photo.public_url ?? ''} alt={`${desktopPreviewPrefecture?.name ?? '旅'}の写真`} />)
+                  selectedPreviewPhotos.map((photo) => (
+                    <img
+                      key={photo.id}
+                      src={getPhotoDisplayUrl(photo)}
+                      alt={`${desktopPreviewPrefecture?.name ?? '旅'}の写真`}
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  ))
                 ) : (
                   <p>{desktopPreviewPrefecture ? '写真はまだありません' : '県を選ぶとアルバムを確認できます'}</p>
                 )}
@@ -851,9 +902,10 @@ export default function App() {
                 recentVisits.slice(0, 3).map((visit) => {
                   const pref = PREFECTURES.find((item) => item.id === visit.prefecture_id);
                   const photo = visit.photos?.[0];
+                  const photoUrl = getPhotoDisplayUrl(photo);
                   return (
                     <article key={visit.id} className="desktop-polaroid" onClick={() => editVisit(visit)}>
-                      {photo?.public_url ? <img src={photo.public_url} alt={`${visit.place_name}の写真`} /> : <div className="desktop-photo-placeholder" />}
+                      {photoUrl ? <img src={photoUrl} alt={`${visit.place_name}の写真`} loading="lazy" decoding="async" /> : <div className="desktop-photo-placeholder" />}
                       <div>
                         <strong>{visit.place_name}</strong>
                         <span>{pref?.name} / {visit.visited_on}</span>
@@ -912,11 +964,16 @@ export default function App() {
               {recentVisits.slice(0, 3).map((visit, index) => {
                 const pref = PREFECTURES.find((item) => item.id === visit.prefecture_id);
                 const photo = visit.photos?.[0];
+                const photoCount = visit.photos?.length ?? 0;
+                const photoUrl = getPhotoDisplayUrl(photo);
                 return (
                   <button key={visit.id} className={`mobile-memory-card ${index === 0 ? 'is-featured' : ''}`} onClick={() => editVisit(visit)}>
                     <figure>
-                      {photo?.public_url ? (
-                        <img src={photo.public_url} alt={`${visit.place_name}の写真`} />
+                      {photoUrl ? (
+                        <>
+                          <img src={photoUrl} alt={`${visit.place_name}の写真`} loading="lazy" decoding="async" />
+                          {photoCount > 1 && <span className="photo-more-badge">+{photoCount - 1}</span>}
+                        </>
                       ) : (
                         <div className="mobile-memory-placeholder">
                           <Camera size={20} />
@@ -1116,6 +1173,15 @@ export default function App() {
             <span>訪問 {visitCounts.get(selected.id) ?? 0}回</span>
             <span>写真 {selectedPhotoCount}枚</span>
           </div>
+          {selectedSheetPhotos.length > 0 && (
+            <div className="map-sheet-photo-strip" aria-label={`${selected.name}の写真`}>
+              {selectedSheetPhotos.map(({ photo, visit }) => (
+                <button key={photo.id} type="button" onClick={() => openVisitFromMapPhoto(visit)}>
+                  <img src={getPhotoDisplayUrl(photo)} alt={`${visit.place_name}の写真`} loading="lazy" decoding="async" />
+                </button>
+              ))}
+            </div>
+          )}
           <p className="empty compact">
             {latestSelectedVisit
               ? `最新の思い出: ${latestSelectedVisit.place_name} (${latestSelectedVisit.visited_on})`
