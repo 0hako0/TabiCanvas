@@ -1449,6 +1449,131 @@ textarea:focus {
     #fffdf8;
 }
 
+.map-photo-stage {
+  position: relative;
+  min-width: 0;
+}
+
+.map-photo-stage > .map-card {
+  position: relative;
+  z-index: 1;
+}
+
+.map-photo-collage {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.map-polaroid-photo {
+  position: absolute;
+  width: clamp(72px, 12vw, 116px);
+  border: 0;
+  border-radius: 7px;
+  padding: 6px 6px 18px;
+  background:
+    linear-gradient(180deg, rgba(255, 253, 248, 0.98), rgba(255, 249, 240, 0.96)),
+    #fffaf2;
+  box-shadow:
+    0 12px 24px rgba(83, 55, 37, 0.16),
+    0 2px 0 rgba(255, 255, 255, 0.7) inset;
+  cursor: pointer;
+  pointer-events: auto;
+  transform-origin: center;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+  animation: map-photo-appear 420ms ease both;
+}
+
+.map-polaroid-photo:hover,
+.map-polaroid-photo:focus-visible {
+  z-index: 6;
+  transform: translateY(-2px) rotate(0deg) scale(1.04);
+  box-shadow: 0 16px 30px rgba(83, 55, 37, 0.2);
+  outline: none;
+}
+
+.map-polaroid-photo img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 0.78;
+  border-radius: 4px;
+  object-fit: cover;
+  background: #eef7ec;
+}
+
+.map-polaroid-caption {
+  position: absolute;
+  right: 6px;
+  bottom: 5px;
+  left: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  overflow: hidden;
+  color: #806b5b;
+  font-size: 0.66rem;
+  font-weight: 900;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.map-polaroid-tape {
+  position: absolute;
+  top: -7px;
+  left: 50%;
+  width: 30px;
+  height: 13px;
+  border-radius: 3px;
+  background: rgba(238, 217, 190, 0.72);
+  box-shadow: 0 2px 6px rgba(83, 55, 37, 0.08);
+  transform: translateX(-50%) rotate(-4deg);
+}
+
+.map-polaroid-photo.slot-1 {
+  top: 13%;
+  right: 12%;
+  transform: rotate(3deg);
+}
+
+.map-polaroid-photo.slot-2 {
+  top: 29%;
+  left: 5%;
+  transform: rotate(-6deg);
+}
+
+.map-polaroid-photo.slot-3 {
+  top: 38%;
+  left: 31%;
+  transform: rotate(5deg);
+}
+
+.map-polaroid-photo.slot-4 {
+  top: 58%;
+  right: 4%;
+  transform: rotate(-5deg);
+}
+
+.map-polaroid-photo.slot-5 {
+  right: 32%;
+  bottom: 8%;
+  transform: rotate(4deg);
+}
+
+@keyframes map-photo-appear {
+  from {
+    opacity: 0;
+    filter: blur(4px);
+  }
+
+  to {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
 .map-toolbar {
   display: flex;
   align-items: flex-start;
@@ -2943,6 +3068,41 @@ time {
 
   .japan-map {
     max-height: none;
+  }
+
+  .map-polaroid-photo {
+    width: clamp(68px, 18vw, 92px);
+    padding: 5px 5px 16px;
+    border-radius: 6px;
+  }
+
+  .map-polaroid-caption {
+    font-size: 0.6rem;
+  }
+
+  .map-polaroid-photo.slot-1 {
+    top: 13%;
+    right: 11%;
+  }
+
+  .map-polaroid-photo.slot-2 {
+    top: 28%;
+    left: 4%;
+  }
+
+  .map-polaroid-photo.slot-3 {
+    top: 38%;
+    left: 30%;
+  }
+
+  .map-polaroid-photo.slot-4 {
+    top: 58%;
+    right: 3%;
+  }
+
+  .map-polaroid-photo.slot-5 {
+    right: 31%;
+    bottom: 8%;
   }
 
   .wishlist-form {

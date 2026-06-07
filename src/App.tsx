@@ -24,6 +24,7 @@ import { AuthScreen } from './components/AuthScreen';
 import { BadgePanel } from './components/BadgePanel';
 import { CoupleSetup } from './components/CoupleSetup';
 import { JapanMap } from './components/JapanMap';
+import { MapPhotoCollage } from './components/MapPhotoCollage';
 import { StatsPanel } from './components/StatsPanel';
 import { TimelinePanel } from './components/TimelinePanel';
 import { WishlistPanel } from './components/WishlistPanel';
@@ -305,6 +306,13 @@ export default function App() {
   function planForSelectedPrefecture() {
     setActiveMobileView('plan');
     setIsMapSheetOpen(false);
+  }
+
+  function openVisitFromMapPhoto(visit: PrefectureVisit) {
+    const prefecture = PREFECTURES.find((item) => item.id === visit.prefecture_id);
+    if (prefecture) setSelected(prefecture);
+    setIsMapSheetOpen(false);
+    setActiveMobileView('timeline');
   }
 
   function previewPrefecture(_prefecture: Prefecture) {
@@ -1079,13 +1087,16 @@ export default function App() {
               })}
             </div>
           </aside>
-          <JapanMap
-            selectedId={selectedPrefecture?.id ?? null}
-            visitCounts={visitCounts}
-            highlightedIds={filteredPrefectureIds}
-            wishlistIds={wishlistIds}
-            onSelect={handlePrefectureSelect}
-          />
+          <div className="map-photo-stage">
+            <JapanMap
+              selectedId={selectedPrefecture?.id ?? null}
+              visitCounts={visitCounts}
+              highlightedIds={filteredPrefectureIds}
+              wishlistIds={wishlistIds}
+              onSelect={handlePrefectureSelect}
+            />
+            <MapPhotoCollage visits={visits} onOpenVisit={openVisitFromMapPhoto} />
+          </div>
         </section>
       </section>
 
