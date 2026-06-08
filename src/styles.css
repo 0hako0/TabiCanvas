@@ -3117,45 +3117,88 @@ time {
     gap: 8px;
   }
 
-  .mobile-region-summary div {
+  .mobile-region-summary article {
     display: grid;
-    grid-template-columns: 1fr auto;
-    align-items: center;
-    gap: 8px 10px;
+    gap: 9px;
     position: relative;
     overflow: hidden;
-    padding: 10px 10px 9px;
+    padding: 12px;
     border: 1px solid #ead8c5;
     border-radius: 14px;
     color: #5e5044;
-    font-size: 0.76rem;
+    font-size: 0.78rem;
     font-weight: 800;
     background:
-      radial-gradient(circle at 88% 18%, rgba(244, 162, 97, 0.12), transparent 20%),
+      radial-gradient(circle at 92% 10%, rgba(167, 196, 160, 0.12), transparent 22%),
       linear-gradient(145deg, #fffdf8, #fff7ec);
     box-shadow: 0 6px 12px rgba(83, 55, 37, 0.045);
     opacity: 0.9;
   }
 
-  .mobile-region-summary div::before {
-    content: "";
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-    position: absolute;
-    right: 12px;
-    top: 12px;
-    background: #a7c4a0;
-    box-shadow: 0 0 0 4px rgba(167, 196, 160, 0.16);
+  .mobile-region-summary article.is-complete {
+    border-color: rgba(111, 143, 106, 0.46);
+    background:
+      radial-gradient(circle at 92% 10%, rgba(244, 162, 97, 0.16), transparent 22%),
+      linear-gradient(145deg, #fffdf8, #f5fbf2);
+  }
+
+  .region-progress-head,
+  .region-progress-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .region-progress-head span {
+    color: #5e5044;
+    font-size: 0.88rem;
+    font-weight: 900;
+  }
+
+  .region-progress-head em {
+    border-radius: 999px;
+    padding: 3px 8px;
+    color: #fffdf8;
+    background: #6f8f6a;
+    font-size: 0.68rem;
+    font-style: normal;
+    font-weight: 900;
+    box-shadow: 0 6px 12px rgba(111, 143, 106, 0.2);
+  }
+
+  .region-progress-meta strong {
+    color: #e76f51;
+    font-size: 0.98rem;
+    line-height: 1;
+  }
+
+  .region-progress-meta small {
+    margin-left: 1px;
+    font-size: 0.68rem;
+  }
+
+  .region-progress-meta b {
+    color: #806b5b;
+    font-size: 0.88rem;
   }
 
   .mobile-region-summary .mini-track {
-    grid-column: 1 / -1;
-    height: 6px;
+    height: 8px;
+    border: 1px solid rgba(234, 216, 197, 0.72);
+    background: #f1e2d4;
+    box-shadow: inset 0 1px 2px rgba(83, 55, 37, 0.06);
   }
 
-  .mobile-region-summary small {
-    color: #806b5b;
+  .mobile-region-summary .mini-track div {
+    min-width: 0;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #8fb083, #f4a261);
+    box-shadow: 0 4px 10px rgba(111, 143, 106, 0.16);
+  }
+
+  .mobile-region-summary article.is-complete .mini-track div {
+    background: linear-gradient(90deg, #6f8f6a, #8fb083);
   }
 
   .mobile-map-section > .stats-grid,

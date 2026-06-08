@@ -1292,14 +1292,21 @@ export default function App() {
             {REGIONS.map((region) => {
               const regionPrefs = PREFECTURES.filter((prefecture) => prefecture.region === region);
               const done = regionPrefs.filter((prefecture) => visitedIds.has(prefecture.id)).length;
+              const percent = Math.round((done / regionPrefs.length) * 100);
               return (
-                <div key={region}>
-                  <span>{region}</span>
-                  <div className="mini-track">
-                    <div style={{ width: `${(done / regionPrefs.length) * 100}%` }} />
+                <article key={region} className={percent === 100 ? 'is-complete' : ''}>
+                  <div className="region-progress-head">
+                    <span>{region}</span>
+                    {percent === 100 && <em>達成</em>}
                   </div>
-                  <small>{done}/{regionPrefs.length}</small>
-                </div>
+                  <div className="region-progress-meta">
+                    <strong>{done}/{regionPrefs.length}<small>県</small></strong>
+                    <b>{percent}%</b>
+                  </div>
+                  <div className="mini-track">
+                    <div style={{ width: `${percent}%` }} />
+                  </div>
+                </article>
               );
             })}
           </div>
