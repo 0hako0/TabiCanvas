@@ -115,9 +115,17 @@ create table if not exists public.wishlist (
   food text,
   sightseeing text,
   memo text,
+  website_url text,
+  google_maps_url text,
   created_by uuid default auth.uid() references auth.users(id) on delete set null,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
 );
+
+alter table public.wishlist
+  add column if not exists website_url text,
+  add column if not exists google_maps_url text,
+  add column if not exists updated_at timestamptz not null default now();
 
 create table if not exists public.notifications (
   id uuid primary key default gen_random_uuid(),

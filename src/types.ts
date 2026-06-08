@@ -66,7 +66,10 @@ export type WishlistItem = {
   food: string | null;
   sightseeing: string | null;
   memo: string | null;
+  website_url: string | null;
+  google_maps_url: string | null;
   created_at: string;
+  updated_at?: string;
 };
 
 export type AppNotification = {
@@ -102,8 +105,11 @@ export type VisitFormState = {
 };
 
 export type WishlistFormState = {
+  prefecture_id: number | '';
   title: string;
   food: string;
   sightseeing: string;
   memo: string;
+  website_url: string;
+  google_maps_url: string;
 };

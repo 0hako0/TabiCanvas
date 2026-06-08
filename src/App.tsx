@@ -74,10 +74,13 @@ const defaultForm: VisitFormState = {
 };
 
 const defaultWishlistForm: WishlistFormState = {
+  prefecture_id: '',
   title: '',
   food: '',
   sightseeing: '',
   memo: '',
+  website_url: '',
+  google_maps_url: '',
 };
 
 const NO_PREFECTURE_SELECTED: Prefecture = {
@@ -125,10 +128,13 @@ export default function App() {
   const [hoveredPrefecture, setHoveredPrefecture] = useState<Prefecture | null>(null);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [isPrefecturePickerOpen, setIsPrefecturePickerOpen] = useState(false);
+  const [isWishlistModalOpen, setIsWishlistModalOpen] = useState(false);
   const [activeMobileView, setActiveMobileView] = useState<'home' | 'map' | 'plan' | 'timeline'>('home');
   const [isMapSheetOpen, setIsMapSheetOpen] = useState(false);
   const [mapFilter, setMapFilter] = useState<'all' | 'visited' | 'unvisited' | 'wishlist'>('all');
   const [editingVisit, setEditingVisit] = useState<PrefectureVisit | null>(null);
+  const [editingWishlistItem, setEditingWishlistItem] = useState<WishlistItem | null>(null);
+  const [planPrefectureFilter, setPlanPrefectureFilter] = useState<number | 'all'>('all');
   const [form, setForm] = useState<VisitFormState>(defaultForm);
   const [wishlistForm, setWishlistForm] = useState<WishlistFormState>(defaultWishlistForm);
   const [files, setFiles] = useState<FileList | null>(null);
@@ -277,6 +283,10 @@ export default function App() {
   const selectedPhotoCount = selectedVisits.reduce((total, visit) => total + (visit.photos?.length ?? 0), 0);
   const latestSelectedVisit = selectedVisits[0];
   const nextWishlistItems = wishlistItems.slice(0, 3);
+  const plannedPrefectureIds = useMemo(() => Array.from(new Set(wishlistItems.map((item) => item.prefecture_id))), [wishlistItems]);
+  const filteredPlanWishlistItems = planPrefectureFilter === 'all'
+    ? wishlistItems
+    : wishlistItems.filter((item) => item.prefecture_id === planPrefectureFilter);
   const filteredPrefectureIds = useMemo(() => {
     if (mapFilter === 'visited') return visitedIds;
     if (mapFilter === 'unvisited') return new Set(PREFECTURES.filter((prefecture) => !visitedIds.has(prefecture.id)).map((prefecture) => prefecture.id));
@@ -349,8 +359,39 @@ export default function App() {
   }
 
   function planForSelectedPrefecture() {
-    setActiveMobileView('plan');
     setIsMapSheetOpen(false);
+    openWishlistModal(selectedPrefecture);
+  }
+
+  function openWishlistModal(prefecture: Prefecture | null = selectedPrefecture) {
+    resetMobileZoom();
+    setEditingWishlistItem(null);
+    setWishlistForm({
+      ...defaultWishlistForm,
+      prefecture_id: prefecture?.id ?? '',
+    });
+    setIsMapSheetOpen(false);
+    setIsWishlistModalOpen(true);
+  }
+
+  function editWishlistItem(item: WishlistItem) {
+    setEditingWishlistItem(item);
+    setWishlistForm({
+      prefecture_id: item.prefecture_id,
+      title: item.title,
+      food: item.food ?? '',
+      sightseeing: item.sightseeing ?? '',
+      memo: item.memo ?? '',
+      website_url: item.website_url ?? '',
+      google_maps_url: item.google_maps_url ?? '',
+    });
+    setIsWishlistModalOpen(true);
+  }
+
+  function closeWishlistModal() {
+    setIsWishlistModalOpen(false);
+    setEditingWishlistItem(null);
+    setWishlistForm(defaultWishlistForm);
   }
 
   function openVisitFromMapPhoto(visit: PrefectureVisit) {
@@ -672,16 +713,41 @@ export default function App() {
 
   async function handleWishlistSubmit(event: FormEvent) {
     event.preventDefault();
-    if (!couple || !selectedPrefecture) return;
+    const prefectureId = Number(wishlistForm.prefecture_id || selectedPrefecture?.id);
+    if (!couple || !prefectureId || !wishlistForm.title.trim()) return;
+    if (editingWishlistItem) {
+      const { error } = await supabase
+        .from('wishlist')
+        .update({
+          prefecture_id: prefectureId,
+          title: wishlistForm.title.trim(),
+          food: wishlistForm.food || null,
+          sightseeing: wishlistForm.sightseeing || null,
+          memo: wishlistForm.memo || null,
+          website_url: wishlistForm.website_url || null,
+          google_maps_url: wishlistForm.google_maps_url || null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', editingWishlistItem.id);
+      if (error) {
+        setMessage(error.message);
+        return;
+      }
+      closeWishlistModal();
+      await loadCoupleAndVisits();
+      return;
+    }
     const { data: wishlist, error } = await supabase
       .from('wishlist')
       .insert({
         couple_id: couple.id,
-        prefecture_id: selectedPrefecture.id,
-        title: wishlistForm.title,
+        prefecture_id: prefectureId,
+        title: wishlistForm.title.trim(),
         food: wishlistForm.food || null,
         sightseeing: wishlistForm.sightseeing || null,
         memo: wishlistForm.memo || null,
+        website_url: wishlistForm.website_url || null,
+        google_maps_url: wishlistForm.google_maps_url || null,
       })
       .select()
       .single();
@@ -692,11 +758,11 @@ export default function App() {
     await createNotifications({
       type: 'wishlist_created',
       title: '行きたい場所が追加されました',
-      message: `${(profile?.nickname ?? 'メンバー')}さんが${selectedPrefecture.name}に「${wishlistForm.title}」を追加しました`,
-      related_prefecture: selectedPrefecture.id,
+      message: `${(profile?.nickname ?? 'メンバー')}さんが${PREFECTURES.find((prefecture) => prefecture.id === prefectureId)?.name ?? '都道府県'}に「${wishlistForm.title}」を追加しました`,
+      related_prefecture: prefectureId,
       related_wishlist_id: (wishlist as WishlistItem).id,
     });
-    setWishlistForm(defaultWishlistForm);
+    closeWishlistModal();
     await loadCoupleAndVisits();
   }
 
@@ -1063,6 +1129,9 @@ export default function App() {
             onFormChange={setWishlistForm}
             onSubmit={handleWishlistSubmit}
             onDelete={deleteWishlistItem}
+            onEdit={editWishlistItem}
+            prefectures={PREFECTURES}
+            showPrefectureSelect={!selectedPrefecture}
           />
 
           <section className="panel desktop-panel-block">
@@ -1175,21 +1244,37 @@ export default function App() {
             <ListTodo size={18} />
             <h2>次に行きたい場所</h2>
           </div>
+          <div className="wishlist-home-actions">
+            <button className="mini-add-button" onClick={() => openWishlistModal(null)}>
+              <Plus size={16} />
+              行きたい場所を追加
+            </button>
+          </div>
           {nextWishlistItems.length ? (
-            <div className="mobile-dashboard-list">
+            <div className="mobile-dashboard-list home-wishlist-list">
               {nextWishlistItems.map((item) => {
                 const pref = PREFECTURES.find((prefecture) => prefecture.id === item.prefecture_id);
+                const summary = [item.food, item.sightseeing, item.memo].filter(Boolean).join(' / ');
                 return (
-                  <button
-                    key={item.id}
-                    onClick={() => {
-                      if (pref) setSelected(pref);
-                      setActiveMobileView('plan');
-                    }}
-                  >
-                    <span>{pref?.name}</span>
-                    <strong>{item.title}</strong>
-                  </button>
+                  <article key={item.id} className="home-wishlist-item">
+                    <button
+                      onClick={() => {
+                        if (pref) setSelected(pref);
+                        setPlanPrefectureFilter(item.prefecture_id);
+                        setActiveMobileView('plan');
+                      }}
+                    >
+                      <span>{pref?.name}</span>
+                      <strong>{item.title}</strong>
+                      {summary && <small>{summary}</small>}
+                    </button>
+                    {(item.website_url || item.google_maps_url) && (
+                      <div className="wishlist-links">
+                        {item.website_url && <a href={item.website_url} target="_blank" rel="noreferrer">公式サイト</a>}
+                        {item.google_maps_url && <a href={item.google_maps_url} target="_blank" rel="noreferrer">Googleマップ</a>}
+                      </div>
+                    )}
+                  </article>
                 );
               })}
             </div>
@@ -1339,14 +1424,48 @@ export default function App() {
       )}
 
       <section className={`mobile-section ${activeMobileView === 'plan' ? 'is-active' : ''}`}>
-        <section className="detail-grid">
+        <section className="detail-grid plan-book">
+          <section className="panel plan-filter-panel">
+            <div className="section-title section-title-with-action">
+              <div>
+                <ListTodo size={18} />
+                <h2>旅行計画帳</h2>
+              </div>
+              <button className="mini-add-button" onClick={() => openWishlistModal(selectedPrefecture)}>
+                <Plus size={16} />
+                追加
+              </button>
+            </div>
+            <p className="empty compact">登録した行きたい場所を、都道府県ごとに確認できます。</p>
+            <div className="plan-filter-scroll" aria-label="行きたい場所の都道府県フィルター">
+              <button className={planPrefectureFilter === 'all' ? 'is-active' : ''} onClick={() => setPlanPrefectureFilter('all')}>
+                すべて
+              </button>
+              {plannedPrefectureIds.map((prefectureId) => {
+                const pref = PREFECTURES.find((prefecture) => prefecture.id === prefectureId);
+                return (
+                  <button
+                    key={prefectureId}
+                    className={planPrefectureFilter === prefectureId ? 'is-active' : ''}
+                    onClick={() => setPlanPrefectureFilter(prefectureId)}
+                  >
+                    {pref?.name}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
           <WishlistPanel
-            selected={selectedPrefecture}
-            items={selectedWishlistItems}
+            selected={planPrefectureFilter === 'all' ? null : PREFECTURES.find((prefecture) => prefecture.id === planPrefectureFilter) ?? null}
+            items={filteredPlanWishlistItems}
             form={wishlistForm}
             onFormChange={setWishlistForm}
             onSubmit={handleWishlistSubmit}
             onDelete={deleteWishlistItem}
+            onEdit={editWishlistItem}
+            prefectures={PREFECTURES}
+            showForm={false}
+            title={planPrefectureFilter === 'all' ? '行きたい場所一覧' : `${PREFECTURES.find((prefecture) => prefecture.id === planPrefectureFilter)?.name}の行きたい場所`}
           />
         </section>
       </section>
@@ -1453,6 +1572,35 @@ export default function App() {
                 );
               })}
             </div>
+          </section>
+        </div>
+      )}
+
+      {isWishlistModalOpen && (
+        <div className="picker-backdrop" role="dialog" aria-modal="true" aria-label="行きたい場所を追加">
+          <section className="panel wishlist-modal-panel">
+            <div className="picker-head">
+              <div>
+                <p className="eyebrow">Travel plan</p>
+                <h2>{editingWishlistItem ? '行きたい場所を編集' : '行きたい場所を追加'}</h2>
+              </div>
+              <button className="icon-button small" aria-label="閉じる" onClick={closeWishlistModal}>
+                <X size={16} />
+              </button>
+            </div>
+            <WishlistPanel
+              selected={null}
+              items={[]}
+              form={wishlistForm}
+              onFormChange={setWishlistForm}
+              onSubmit={handleWishlistSubmit}
+              onDelete={deleteWishlistItem}
+              prefectures={PREFECTURES}
+              showPrefectureSelect
+              showItems={false}
+              title={editingWishlistItem ? '旅行計画メモ' : 'どこに行きたいですか？'}
+              submitLabel={editingWishlistItem ? '保存する' : '追加する'}
+            />
           </section>
         </div>
       )}

@@ -1946,6 +1946,33 @@ textarea:focus {
   color: #e76f51;
 }
 
+.section-title-with-action {
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.section-title-with-action > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.mini-add-button {
+  min-height: 36px;
+  border: 1px solid #ead8c5;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 12px;
+  color: #e76f51;
+  background: #fff7ef;
+  font-size: 0.84rem;
+  font-weight: 900;
+  box-shadow: 0 8px 18px rgba(83, 55, 37, 0.08);
+}
+
 .file-drop {
   min-height: 94px;
   place-items: center;
@@ -2185,12 +2212,24 @@ time {
 
 .wishlist-form {
   display: grid;
-  grid-template-columns: minmax(180px, 1.2fr) minmax(130px, 0.8fr) minmax(130px, 0.8fr) auto;
+  grid-template-columns: minmax(150px, 0.7fr) minmax(180px, 1.2fr) minmax(130px, 0.8fr) minmax(130px, 0.8fr);
   gap: 8px;
 }
 
-.wishlist-form input {
+.wishlist-form input,
+.wishlist-form select,
+.wishlist-form textarea {
   min-height: 42px;
+}
+
+.wishlist-form textarea,
+.wishlist-form input[placeholder="公式サイトURL"],
+.wishlist-form input[placeholder="GoogleマップURL"] {
+  grid-column: 1 / -1;
+}
+
+.wishlist-form button {
+  grid-column: 1 / -1;
 }
 
 .wishlist-items {
@@ -2219,6 +2258,111 @@ time {
   margin-bottom: 0;
   color: #806b5b;
   font-size: 0.86rem;
+}
+
+.wishlist-prefecture-label {
+  display: inline-block;
+  margin-bottom: 4px;
+  color: #6f8f6a;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.wishlist-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 8px;
+}
+
+.wishlist-links a {
+  min-height: 30px;
+  border: 1px solid #ead8c5;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 9px;
+  color: #5d7658;
+  background: rgba(255, 253, 248, 0.78);
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.wishlist-item-actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 6px;
+}
+
+.wishlist-modal-panel {
+  width: min(100%, 640px);
+  max-height: min(88vh, 760px);
+  margin: 0 auto;
+  overflow: auto;
+  padding: 18px;
+}
+
+.wishlist-modal-panel .wishlist-panel {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.plan-book {
+  gap: 12px;
+}
+
+.plan-filter-scroll {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scroll-snap-type: x proximity;
+}
+
+.plan-filter-scroll button {
+  flex: 0 0 auto;
+  min-height: 38px;
+  border: 1px solid #ead8c5;
+  border-radius: 999px;
+  padding: 7px 14px;
+  color: #6f5d50;
+  background: #fffaf2;
+  font-weight: 900;
+  scroll-snap-align: start;
+}
+
+.plan-filter-scroll button.is-active {
+  border-color: #e76f51;
+  color: #fffdf8;
+  background: #e76f51;
+}
+
+.home-wishlist-item {
+  border: 1px solid rgba(234, 216, 197, 0.78);
+  border-radius: 14px;
+  padding: 10px;
+  background: rgba(255, 250, 242, 0.84);
+}
+
+.home-wishlist-item > button {
+  width: 100%;
+  border: 0;
+  min-height: auto;
+  padding: 0;
+  background: transparent;
+}
+
+.home-wishlist-item small {
+  color: #806b5b;
+  font-size: 0.8rem;
+  font-weight: 800;
+  line-height: 1.45;
 }
 
 .comment-box {
