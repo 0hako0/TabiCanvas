@@ -2582,6 +2582,8 @@ time {
   .header-actions {
     flex: 0 0 auto;
     gap: 6px;
+    position: relative;
+    z-index: 2;
   }
 
   .app-header .icon-button {
@@ -2620,17 +2622,11 @@ time {
   }
 
   .app-header::before {
-    right: 64px;
-    top: 14px;
-    font-size: 0.68rem;
+    display: none;
   }
 
   .app-header.is-home::before {
-    right: 54px;
-    top: 18px;
-    color: rgba(143, 111, 84, 0.38);
-    font-size: 0.72rem;
-    letter-spacing: 0.16em;
+    display: none;
   }
 
   .app-header.is-home::after {
