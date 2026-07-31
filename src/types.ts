@@ -68,6 +68,8 @@ export type WishlistItem = {
   memo: string | null;
   website_url: string | null;
   google_maps_url: string | null;
+  converted_memory_id?: string | null;
+  completed_at?: string | null;
   created_at: string;
   updated_at?: string;
 };

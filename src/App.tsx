@@ -134,6 +134,8 @@ export default function App() {
   const [mapFilter, setMapFilter] = useState<'all' | 'visited' | 'unvisited' | 'wishlist'>('all');
   const [editingVisit, setEditingVisit] = useState<PrefectureVisit | null>(null);
   const [editingWishlistItem, setEditingWishlistItem] = useState<WishlistItem | null>(null);
+  const [convertingWishlistItem, setConvertingWishlistItem] = useState<WishlistItem | null>(null);
+  const [completedWishlistPrompt, setCompletedWishlistPrompt] = useState<WishlistItem | null>(null);
   const [planPrefectureFilter, setPlanPrefectureFilter] = useState<number | 'all'>('all');
   const [form, setForm] = useState<VisitFormState>(defaultForm);
   const [wishlistForm, setWishlistForm] = useState<WishlistFormState>(defaultWishlistForm);
@@ -315,6 +317,7 @@ export default function App() {
     setIsMapSheetOpen(false);
     setIsPrefecturePickerOpen(false);
     setEditingVisit(null);
+    setConvertingWishlistItem(null);
     setForm(defaultForm);
     setFiles(null);
     setIsEditorOpen(true);
@@ -326,6 +329,7 @@ export default function App() {
     setIsMapSheetOpen(false);
     setIsPrefecturePickerOpen(false);
     setEditingVisit(null);
+    setConvertingWishlistItem(null);
     setForm(defaultForm);
     setFiles(null);
     setIsEditorOpen(true);
@@ -346,6 +350,40 @@ export default function App() {
 
   function choosePrefectureForNewVisit(prefecture: Prefecture) {
     openEditorForPrefecture(prefecture);
+  }
+
+  function buildWishlistMemoryMemo(item: WishlistItem) {
+    return [
+      item.memo,
+      item.food ? `食べたいもの: ${item.food}` : '',
+      item.sightseeing ? `行きたい観光地: ${item.sightseeing}` : '',
+      item.website_url ? `公式サイト: ${item.website_url}` : '',
+      item.google_maps_url ? `Googleマップ: ${item.google_maps_url}` : '',
+    ].filter(Boolean).join('\n');
+  }
+
+  function convertWishlistToVisit(item: WishlistItem) {
+    const isConverted = Boolean(item.converted_memory_id || item.completed_at);
+    if (isConverted && !window.confirm('この場所はすでに思い出へ登録されています。再訪として追加しますか？')) {
+      return;
+    }
+    const prefecture = PREFECTURES.find((pref) => pref.id === item.prefecture_id);
+    if (!prefecture) return;
+    resetMobileZoom();
+    setSelected(prefecture);
+    setEditingVisit(null);
+    setConvertingWishlistItem(item);
+    setForm({
+      ...defaultForm,
+      place_name: item.title,
+      memo: buildWishlistMemoryMemo(item),
+      tags: '行きたい場所から',
+    });
+    setFiles(null);
+    setIsMapSheetOpen(false);
+    setIsPrefecturePickerOpen(false);
+    setIsWishlistModalOpen(false);
+    setIsEditorOpen(true);
   }
 
   function goToMapView() {
@@ -474,9 +512,26 @@ export default function App() {
       });
     }
 
+    if (!editingVisit && convertingWishlistItem) {
+      const { error: wishlistUpdateError } = await supabase
+        .from('wishlist')
+        .update({
+          converted_memory_id: visit.id,
+          completed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', convertingWishlistItem.id);
+      if (wishlistUpdateError) {
+        setMessage(wishlistUpdateError.message);
+      } else {
+        setCompletedWishlistPrompt(convertingWishlistItem);
+      }
+    }
+
     setForm(defaultForm);
     setFiles(null);
     setEditingVisit(null);
+    setConvertingWishlistItem(null);
     setIsEditorOpen(false);
     await loadCoupleAndVisits();
     setSaving(false);
@@ -496,6 +551,7 @@ export default function App() {
       tags: visit.tags.join(', '),
     });
     setFiles(null);
+    setConvertingWishlistItem(null);
     setIsEditorOpen(true);
   }
 
@@ -1130,6 +1186,7 @@ export default function App() {
             onSubmit={handleWishlistSubmit}
             onDelete={deleteWishlistItem}
             onEdit={editWishlistItem}
+            onConvertToVisit={convertWishlistToVisit}
             prefectures={PREFECTURES}
             showPrefectureSelect={!selectedPrefecture}
           />
@@ -1470,6 +1527,7 @@ export default function App() {
             onSubmit={handleWishlistSubmit}
             onDelete={deleteWishlistItem}
             onEdit={editWishlistItem}
+            onConvertToVisit={convertWishlistToVisit}
             prefectures={PREFECTURES}
             showForm={false}
             title={planPrefectureFilter === 'all' ? '行きたい場所一覧' : `${PREFECTURES.find((prefecture) => prefecture.id === planPrefectureFilter)?.name}の行きたい場所`}
@@ -1608,6 +1666,38 @@ export default function App() {
               title={editingWishlistItem ? '旅行計画メモ' : 'どこに行きたいですか？'}
               submitLabel={editingWishlistItem ? '保存する' : '追加する'}
             />
+          </section>
+        </div>
+      )}
+
+      {completedWishlistPrompt && (
+        <div className="picker-backdrop" role="dialog" aria-modal="true" aria-label="行きたい場所の整理">
+          <section className="panel wishlist-completion-panel">
+            <div className="picker-head">
+              <div>
+                <p className="eyebrow">Memory saved</p>
+                <h2>思い出を登録しました</h2>
+              </div>
+              <button className="icon-button small" aria-label="閉じる" onClick={() => setCompletedWishlistPrompt(null)}>
+                <X size={16} />
+              </button>
+            </div>
+            <p className="empty compact">この場所を行きたい場所一覧から削除しますか？</p>
+            <div className="wishlist-completion-actions">
+              <button className="secondary-button" onClick={() => setCompletedWishlistPrompt(null)}>
+                行きたい場所に残す
+              </button>
+              <button
+                className="primary-button"
+                onClick={async () => {
+                  const itemId = completedWishlistPrompt.id;
+                  setCompletedWishlistPrompt(null);
+                  await deleteWishlistItem(itemId);
+                }}
+              >
+                一覧から削除する
+              </button>
+            </div>
           </section>
         </div>
       )}

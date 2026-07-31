@@ -117,6 +117,8 @@ create table if not exists public.wishlist (
   memo text,
   website_url text,
   google_maps_url text,
+  converted_memory_id uuid references public.prefecture_visits(id) on delete set null,
+  completed_at timestamptz,
   created_by uuid default auth.uid() references auth.users(id) on delete set null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -125,6 +127,8 @@ create table if not exists public.wishlist (
 alter table public.wishlist
   add column if not exists website_url text,
   add column if not exists google_maps_url text,
+  add column if not exists converted_memory_id uuid references public.prefecture_visits(id) on delete set null,
+  add column if not exists completed_at timestamptz,
   add column if not exists updated_at timestamptz not null default now();
 
 create table if not exists public.notifications (

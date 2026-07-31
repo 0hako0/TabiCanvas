@@ -1,5 +1,5 @@
 import { FormEvent } from 'react';
-import { Edit3, ExternalLink, ListPlus, Navigation, Trash2 } from 'lucide-react';
+import { Camera, CheckCircle2, Edit3, ExternalLink, ListPlus, Navigation, Trash2 } from 'lucide-react';
 import type { Prefecture, WishlistFormState, WishlistItem } from '../types';
 
 type Props = {
@@ -16,6 +16,7 @@ type Props = {
   submitLabel?: string;
   showForm?: boolean;
   onEdit?: (item: WishlistItem) => void;
+  onConvertToVisit?: (item: WishlistItem) => void;
 };
 
 function itemSummary(item: WishlistItem) {
@@ -36,6 +37,7 @@ export function WishlistPanel({
   submitLabel = '追加',
   showForm = true,
   onEdit,
+  onConvertToVisit,
 }: Props) {
   const canChoosePrefecture = showPrefectureSelect && prefectures.length > 0;
   const selectedPrefectureId = selected?.id ?? form.prefecture_id;
@@ -116,7 +118,7 @@ export function WishlistPanel({
           ) : (
             items.map((item) => (
             <article key={item.id} className="wishlist-item">
-              <div>
+              <div className="wishlist-item-main">
                 {!selected && (
                   <span className="wishlist-prefecture-label">
                     {prefectures.find((prefecture) => prefecture.id === item.prefecture_id)?.name}
@@ -151,6 +153,16 @@ export function WishlistPanel({
                   <Trash2 size={16} />
                 </button>
               </div>
+              {onConvertToVisit && (
+                <button
+                  className={`wishlist-convert-button ${item.converted_memory_id || item.completed_at ? 'is-converted' : ''}`}
+                  onClick={() => onConvertToVisit(item)}
+                  type="button"
+                >
+                  {item.converted_memory_id || item.completed_at ? <CheckCircle2 size={16} /> : <Camera size={16} />}
+                  {item.converted_memory_id || item.completed_at ? '登録済み・再訪として追加' : '行った場所に追加'}
+                </button>
+              )}
             </article>
             ))
           )}
