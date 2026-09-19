@@ -43,6 +43,7 @@ button {
 .panel,
 .stat-card,
 .region-card,
+.ranking-card,
 .visit-card,
 .map-card {
   background: rgba(255, 255, 255, 0.84);
@@ -1341,6 +1342,48 @@ textarea:focus {
   padding: 12px;
   display: grid;
   gap: 8px;
+}
+
+.ranking-card {
+  grid-column: 1 / -1;
+  padding: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.ranking-card-label {
+  font-size: 0.84rem;
+  font-weight: 800;
+  color: #735c4a;
+}
+
+.ranking-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ranking-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #ead8c5;
+  border-radius: 999px;
+  padding: 7px 12px;
+  color: #6f5d50;
+  background: #fffaf2;
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.ranking-chip em {
+  font-style: normal;
+  color: #e76f51;
+}
+
+.ranking-chip b {
+  color: #9d8776;
+  font-weight: 800;
 }
 
 .badge-panel,
@@ -2902,7 +2945,7 @@ time {
 
   .mobile-summary-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
     margin: 10px 0;
   }
@@ -2944,6 +2987,10 @@ time {
 
   .mobile-summary-card .progress-track div {
     background: linear-gradient(90deg, #9fbd8b, #edb46d, #e76f51);
+  }
+
+  .mobile-ranking-row {
+    margin-top: 10px;
   }
 
   .mobile-dashboard-actions {
@@ -3872,6 +3919,7 @@ body {
 .panel,
 .stat-card,
 .region-card,
+.ranking-card,
 .visit-card,
 .map-card,
 .auth-card {
