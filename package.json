@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "photos:thumbnails": "node scripts/generate-photo-thumbnails.mjs",
+    "backup:data": "node scripts/backup-data.mjs",
     "preview": "vite preview",
     "lint": "eslint ."
   },

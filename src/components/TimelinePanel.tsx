@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Clock, Image as ImageIcon, MessageCircle, Pencil, Trash2, X } from 'lucide-react';
 import { PREFECTURES } from '../data/prefectures';
 import type { Prefecture, PrefectureVisit, Profile, VisitPhoto } from '../types';
@@ -201,20 +202,22 @@ function TimelineCard({
         </form>
       </div>
 
-      {previewPhoto && (
-        <div className="photo-lightbox" role="dialog" aria-modal="true" aria-label="写真を拡大表示" onClick={() => setPreviewPhoto(null)}>
-          <button className="icon-button small" aria-label="閉じる" onClick={() => setPreviewPhoto(null)}>
-            <X size={16} />
-          </button>
-          <img
-            src={getPhotoOriginal(previewPhoto)}
-            alt={`${visit.place_name}の写真`}
-            loading="eager"
-            decoding="async"
-            onClick={(event) => event.stopPropagation()}
-          />
-        </div>
-      )}
+      {previewPhoto &&
+        createPortal(
+          <div className="photo-lightbox" role="dialog" aria-modal="true" aria-label="写真を拡大表示" onClick={() => setPreviewPhoto(null)}>
+            <button className="icon-button small" aria-label="閉じる" onClick={() => setPreviewPhoto(null)}>
+              <X size={16} />
+            </button>
+            <img
+              src={getPhotoOriginal(previewPhoto)}
+              alt={`${visit.place_name}の写真`}
+              loading="eager"
+              decoding="async"
+              onClick={(event) => event.stopPropagation()}
+            />
+          </div>,
+          document.body,
+        )}
     </article>
   );
 }
