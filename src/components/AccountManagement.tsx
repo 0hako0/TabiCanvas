@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { AlertTriangle, Download, Loader2, RotateCcw, Trash2, UserX } from 'lucide-react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { AlertTriangle, Download, KeyRound, Loader2, RotateCcw, Trash2, UserX } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import type { Profile } from '../types';
 
@@ -12,7 +12,7 @@ type Props = {
   onChanged: () => Promise<void> | void;
 };
 
-type ActionState = 'idle' | 'exporting' | 'deactivating' | 'restoring' | 'deleting' | 'saving-settings';
+type ActionState = 'idle' | 'exporting' | 'deactivating' | 'restoring' | 'deleting' | 'saving-settings' | 'saving-password';
 type ConfirmAction = 'deactivate' | 'delete' | null;
 
 function daysUntil(dateText?: string | null) {
@@ -34,6 +34,9 @@ export function AccountManagement({
   const [message, setMessage] = useState('');
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
   const [inAppEnabled, setInAppEnabled] = useState(inAppNotificationsEnabled);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordMessage, setPasswordMessage] = useState('');
   const remainingDays = useMemo(() => daysUntil(profile.deletion_due_at), [profile.deletion_due_at]);
 
   useEffect(() => {
@@ -69,6 +72,31 @@ export function AccountManagement({
     } catch (error) {
       setInAppEnabled(previousValue);
       setMessage(error instanceof Error ? error.message : '通知設定の保存に失敗しました。');
+    } finally {
+      setAction('idle');
+    }
+  }
+
+  async function updatePassword(event: FormEvent) {
+    event.preventDefault();
+    setPasswordMessage('');
+    if (newPassword.length < 6) {
+      setPasswordMessage('パスワードは6文字以上で入力してください。');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordMessage('確認用パスワードが一致しません。');
+      return;
+    }
+    setAction('saving-password');
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      setNewPassword('');
+      setConfirmPassword('');
+      setPasswordMessage('パスワードを変更しました。');
+    } catch (error) {
+      setPasswordMessage(error instanceof Error ? error.message : 'パスワードの変更に失敗しました。');
     } finally {
       setAction('idle');
     }
@@ -174,6 +202,42 @@ export function AccountManagement({
           </span>
           <input type="checkbox" checked={pushNotificationsEnabled} disabled readOnly />
         </label>
+      </section>
+
+      <section className="settings-section">
+        <h3>パスワードの変更</h3>
+        <p className="account-help">ログインできなくなった場合に備えて、定期的に変更しておくと安心です。</p>
+        <form className="stack" onSubmit={updatePassword}>
+          <label>
+            新しいパスワード
+            <input
+              type="password"
+              value={newPassword}
+              onChange={(event) => setNewPassword(event.target.value)}
+              autoComplete="new-password"
+              placeholder="6文字以上"
+              minLength={6}
+              required
+            />
+          </label>
+          <label>
+            新しいパスワード（確認）
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(event) => setConfirmPassword(event.target.value)}
+              autoComplete="new-password"
+              placeholder="もう一度入力"
+              minLength={6}
+              required
+            />
+          </label>
+          <button className="secondary-button" disabled={isBusy}>
+            {action === 'saving-password' ? <Loader2 className="spin" size={18} /> : <KeyRound size={18} />}
+            パスワードを変更する
+          </button>
+          {passwordMessage && <p className="form-message">{passwordMessage}</p>}
+        </form>
       </section>
 
       <div className="section-title danger-title">
