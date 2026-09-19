@@ -1,7 +1,6 @@
 import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Award,
-  Bed,
   Bell,
   Camera,
   CalendarDays,
@@ -309,7 +308,6 @@ export default function App() {
     const top = [...visitCounts.entries()].sort((a, b) => b[1] - a[1])[0];
     return top ? PREFECTURES.find((prefecture) => prefecture.id === top[0])?.name ?? 'これから' : 'これから';
   }, [visitCounts]);
-  const totalNights = useMemo(() => visits.reduce((sum, visit) => sum + (visit.nights ?? 0), 0), [visits]);
   const visitRanking = useMemo(
     () =>
       [...visitCounts.entries()]
@@ -1362,11 +1360,6 @@ export default function App() {
               <Camera size={18} />
               <span>一番行った県</span>
               <strong>{topPrefecture}</strong>
-            </div>
-            <div>
-              <Bed size={18} />
-              <span>総宿泊数</span>
-              <strong>{totalNights}泊</strong>
             </div>
           </div>
           <div className="progress-track">

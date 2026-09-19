@@ -1,4 +1,4 @@
-import { BarChart3, Bed, MapPin, Trophy } from 'lucide-react';
+import { BarChart3, MapPin, Trophy } from 'lucide-react';
 import { PREFECTURES, REGIONS } from '../data/prefectures';
 import type { PrefectureVisit } from '../types';
 
@@ -15,7 +15,6 @@ export function StatsPanel({ visits }: Props) {
   }, new Map());
   const ranking = [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3);
   const topName = ranking[0] ? PREFECTURES.find((pref) => pref.id === ranking[0][0])?.name : 'これから';
-  const totalNights = visits.reduce((sum, visit) => sum + (visit.nights ?? 0), 0);
 
   return (
     <section className="stats-grid">
@@ -37,11 +36,6 @@ export function StatsPanel({ visits }: Props) {
         <BarChart3 size={22} />
         <span>一番行った県</span>
         <strong>{topName}</strong>
-      </div>
-      <div className="stat-card">
-        <Bed size={22} />
-        <span>総宿泊数</span>
-        <strong>{totalNights}泊</strong>
       </div>
       <div className="region-card">
         {REGIONS.map((region) => {
