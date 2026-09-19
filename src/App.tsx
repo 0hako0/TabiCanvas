@@ -15,6 +15,7 @@ import {
   Plus,
   Search,
   Settings,
+  Trash2,
   Trophy,
   X,
 } from 'lucide-react';
@@ -99,6 +100,14 @@ function getPhotoDisplayUrl(photo?: VisitPhoto | null) {
   return photo.thumbnail_url ?? photo.public_url ?? photo.original_url ?? '';
 }
 
+function describeConnectionError(error: unknown) {
+  const raw = error instanceof Error ? error.message : String(error);
+  if (/fetch|network|NetworkError|Failed to fetch|timeout/i.test(raw)) {
+    return 'サーバーに接続できません。Supabaseプロジェクトが停止している可能性があります。しばらくしてから再度お試しください。';
+  }
+  return `データの読み込みに失敗しました（${raw}）。しばらくしてから再度お試しください。`;
+}
+
 function resetMobileZoom() {
   const viewport = document.querySelector<HTMLMetaElement>('meta[name="viewport"]');
   if (!viewport) return;
@@ -144,6 +153,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
+  const [loadError, setLoadError] = useState('');
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isAccountManagementOpen, setIsAccountManagementOpen] = useState(false);
   const mapCollagePhotoIdsRef = useRef<string[]>([]);
@@ -153,10 +163,17 @@ export default function App() {
       setLoading(false);
       return;
     }
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setLoading(false);
-    });
+    supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        setSession(data.session);
+      })
+      .catch((error) => {
+        setLoadError(describeConnectionError(error));
+      })
+      .finally(() => {
+        setLoading(false);
+      });
     const { data } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       setSession(nextSession);
     });
@@ -180,6 +197,17 @@ export default function App() {
   async function loadCoupleAndVisits() {
     setLoading(true);
     setMessage('');
+    setLoadError('');
+    try {
+      await loadCoupleAndVisitsInner();
+    } catch (error) {
+      setLoadError(describeConnectionError(error));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function loadCoupleAndVisitsInner() {
     const { data: ownProfile } = await supabase
       .from('profiles')
       .select('*')
@@ -253,7 +281,6 @@ export default function App() {
       setMapCollageVisits([]);
       setNotifications([]);
     }
-    setLoading(false);
   }
 
   const visitCounts = useMemo(() => {
@@ -742,8 +769,19 @@ export default function App() {
       photo.original_url && !/^https?:\/\//.test(photo.original_url) ? photo.original_url : null,
       photo.thumbnail_url && !/^https?:\/\//.test(photo.thumbnail_url) ? photo.thumbnail_url : null,
     ].filter(Boolean) as string[];
-    await supabase.storage.from('travel-photos').remove([...new Set(paths)]);
-    await supabase.from('photos').delete().eq('id', photo.id);
+
+    // 旅行記録自体は残したまま、この写真だけを即座にUIから取り除く
+    const removePhotoFromVisit = (visit: PrefectureVisit) =>
+      visit.photos?.some((item) => item.id === photo.id)
+        ? { ...visit, photos: visit.photos.filter((item) => item.id !== photo.id) }
+        : visit;
+    setVisits((current) => current.map(removePhotoFromVisit));
+    setEditingVisit((current) => (current ? removePhotoFromVisit(current) : current));
+
+    const { error: storageError } = await supabase.storage.from('travel-photos').remove([...new Set(paths)]);
+    if (storageError) setMessage(storageError.message);
+    const { error: dbError } = await supabase.from('photos').delete().eq('id', photo.id);
+    if (dbError) setMessage(dbError.message);
     await loadCoupleAndVisits();
   }
 
@@ -921,6 +959,30 @@ export default function App() {
       <main className="loading-screen">
         <Loader2 className="spin" />
         <span>旅の記録を読み込み中...</span>
+      </main>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <main className="auth-shell">
+        <section className="auth-card">
+          <h1>読み込みに失敗しました</h1>
+          <p className="lead">{loadError}</p>
+          <button
+            className="primary-button"
+            onClick={() => {
+              setLoadError('');
+              if (session) {
+                loadCoupleAndVisits();
+              } else {
+                window.location.reload();
+              }
+            }}
+          >
+            再読み込み
+          </button>
+        </section>
       </main>
     );
   }
@@ -1769,6 +1831,27 @@ export default function App() {
                   onChange={(event) => setForm({ ...form, nights: Number(event.target.value) })}
                 />
               </label>
+              {editingVisit && (editingVisit.photos?.length ?? 0) > 0 && (
+                <div className="existing-photos">
+                  <span className="existing-photos-label">登録済みの写真</span>
+                  <div className="existing-photo-grid">
+                    {editingVisit.photos!.map((photo) => (
+                      <div key={photo.id} className="existing-photo-item">
+                        <img src={getPhotoDisplayUrl(photo)} alt="旅の写真" loading="lazy" decoding="async" />
+                        <button
+                          type="button"
+                          className="photo-delete-button"
+                          aria-label="この写真を削除"
+                          onClick={() => deletePhoto(photo)}
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <label className="file-drop">
                 <ImagePlus size={24} />
                 <span>{files?.length ? `${files.length}枚選択中` : '写真を選択'}</span>
