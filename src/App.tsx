@@ -5,6 +5,7 @@ import {
   Camera,
   CalendarDays,
   CheckCheck,
+  CheckCircle2,
   Clock,
   Home,
   ImagePlus,
@@ -1393,6 +1394,14 @@ export default function App() {
                         {item.google_maps_url && <a href={item.google_maps_url} target="_blank" rel="noreferrer">Googleマップ</a>}
                       </div>
                     )}
+                    <button
+                      type="button"
+                      className={`wishlist-convert-button ${item.converted_memory_id || item.completed_at ? 'is-converted' : ''}`}
+                      onClick={() => convertWishlistToVisit(item)}
+                    >
+                      {item.converted_memory_id || item.completed_at ? <CheckCircle2 size={16} /> : <Camera size={16} />}
+                      {item.converted_memory_id || item.completed_at ? '登録済み・再訪として追加' : '行った場所に追加'}
+                    </button>
                   </article>
                 );
               })}
@@ -1535,6 +1544,24 @@ export default function App() {
               ? `最新の思い出: ${latestSelectedVisit.place_name} (${latestSelectedVisit.visited_on})`
               : 'この県の思い出はまだありません。'}
           </p>
+          {selectedWishlistItems.length > 0 && (
+            <div className="map-sheet-wishlist" aria-label={`${selected.name}の行きたい場所`}>
+              <p className="map-sheet-wishlist-label">行きたい場所</p>
+              {selectedWishlistItems.map((item) => (
+                <article key={item.id} className="map-sheet-wishlist-item">
+                  <span>{item.title}</span>
+                  <button
+                    type="button"
+                    className={`wishlist-convert-button compact ${item.converted_memory_id || item.completed_at ? 'is-converted' : ''}`}
+                    onClick={() => convertWishlistToVisit(item)}
+                  >
+                    {item.converted_memory_id || item.completed_at ? <CheckCircle2 size={14} /> : <Camera size={14} />}
+                    {item.converted_memory_id || item.completed_at ? '再訪を追加' : '行った場所に追加'}
+                  </button>
+                </article>
+              ))}
+            </div>
+          )}
           <div className="map-sheet-actions">
             <button className="secondary-button" onClick={viewSelectedMemories}>
               思い出を見る

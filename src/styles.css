@@ -2456,6 +2456,51 @@ time {
   line-height: 1.45;
 }
 
+.home-wishlist-item .wishlist-convert-button {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.map-sheet-wishlist {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.map-sheet-wishlist-label {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #6f5d50;
+}
+
+.map-sheet-wishlist-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: 1px solid rgba(234, 216, 197, 0.78);
+  border-radius: 12px;
+  padding: 8px 10px;
+  background: rgba(255, 250, 242, 0.84);
+}
+
+.map-sheet-wishlist-item span {
+  font-weight: 800;
+  color: #4a3c30;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wishlist-convert-button.compact {
+  flex-shrink: 0;
+  min-height: 34px;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+}
+
 .comment-box {
   display: grid;
   gap: 8px;
