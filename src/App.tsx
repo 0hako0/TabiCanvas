@@ -308,6 +308,14 @@ export default function App() {
     const top = [...visitCounts.entries()].sort((a, b) => b[1] - a[1])[0];
     return top ? PREFECTURES.find((prefecture) => prefecture.id === top[0])?.name ?? 'これから' : 'これから';
   }, [visitCounts]);
+  const visitRanking = useMemo(
+    () =>
+      [...visitCounts.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3)
+        .map(([prefectureId, count]) => ({ prefectureId, count, name: PREFECTURES.find((prefecture) => prefecture.id === prefectureId)?.name })),
+    [visitCounts],
+  );
   const recentVisits = visits.slice(0, 5);
   const selectedPreviewPhotos = desktopPreviewVisits.flatMap((visit) => visit.photos ?? []).slice(0, 4);
   const selectedPhotoCount = selectedVisits.reduce((total, visit) => total + (visit.photos?.length ?? 0), 0);
@@ -1357,6 +1365,17 @@ export default function App() {
           <div className="progress-track">
             <div style={{ width: `${completionRate}%` }} />
           </div>
+          {visitRanking.length > 0 && (
+            <div className="ranking-chip-row mobile-ranking-row">
+              {visitRanking.map((entry, index) => (
+                <span key={entry.prefectureId} className="ranking-chip">
+                  <em>{index + 1}位</em>
+                  {entry.name}
+                  <b>{entry.count}回</b>
+                </span>
+              ))}
+            </div>
+          )}
         </section>
 
         <section className="panel mobile-dashboard-card">

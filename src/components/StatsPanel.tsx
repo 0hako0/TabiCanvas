@@ -13,8 +13,8 @@ export function StatsPanel({ visits }: Props) {
     map.set(visit.prefecture_id, (map.get(visit.prefecture_id) ?? 0) + 1);
     return map;
   }, new Map());
-  const top = [...counts.entries()].sort((a, b) => b[1] - a[1])[0];
-  const topName = top ? PREFECTURES.find((pref) => pref.id === top[0])?.name : 'これから';
+  const ranking = [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3);
+  const topName = ranking[0] ? PREFECTURES.find((pref) => pref.id === ranking[0][0])?.name : 'これから';
 
   return (
     <section className="stats-grid">
@@ -54,6 +54,20 @@ export function StatsPanel({ visits }: Props) {
           );
         })}
       </div>
+      {ranking.length > 0 && (
+        <div className="ranking-card">
+          <span className="ranking-card-label">訪問回数ランキング</span>
+          <div className="ranking-chip-row">
+            {ranking.map(([prefectureId, count], index) => (
+              <span key={prefectureId} className="ranking-chip">
+                <em>{index + 1}位</em>
+                {PREFECTURES.find((pref) => pref.id === prefectureId)?.name}
+                <b>{count}回</b>
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
     </section>
   );
 }
