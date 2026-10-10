@@ -3,8 +3,8 @@
 //
 // 前提:
 //   - 復元先のSupabaseプロジェクトに、ログインアカウント（Supabase Authのユーザー）が
-//     既に存在していること。auth.usersはこのバックアップ/復元の対象外のため、
-//     プロジェクトを作り直した場合は先にお二人のアカウントを再作成してから実行すること。
+//     既に存在していること。auth.usersの行自体はこのバックアップ/復元の対象外のため、
+//     プロジェクトを作り直した場合は先にお二人のアカウントを再作成しておくこと。
 //   - テーブル構造・RLS・Storage設定は supabase/schema.sql を先に流し込んでおくこと。
 //
 // 使い方:
@@ -17,6 +17,14 @@
 //
 // 動作は upsert（id一致なら上書き、なければ追加）のみで、既存データの削除は行わない。
 // couples -> couple_members -> profiles -> ... の順で、外部キー関係の親から先に書き込む。
+//
+// ユーザーIDの付け替え:
+// 別のSupabaseプロジェクトへ復元する場合、サインアップし直すとユーザーIDが
+// 変わるため、バックアップ内の旧IDのままでは外部キー（auth.users参照）に
+// 一致しない。backup_dir/auth_users.json（backup-data.mjsが保存した旧ID⇔
+// メールアドレス一覧）と、復元先プロジェクトの現在のユーザー一覧をメール
+// アドレスで突き合わせ、各テーブルのユーザーID項目を新IDへ自動で置き換える。
+// 同じプロジェクトに戻すだけ（IDが変わらない）場合は、置き換えは実質何もしない。
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -25,18 +33,18 @@ import readline from 'node:readline/promises';
 import { createClient } from '@supabase/supabase-js';
 
 const TABLES = [
-  { name: 'couples', conflictKey: 'id' },
-  { name: 'couple_members', conflictKey: 'id' },
-  { name: 'profiles', conflictKey: 'user_id' },
-  { name: 'prefecture_visits', conflictKey: 'id' },
-  { name: 'visit_locations', conflictKey: 'id' },
-  { name: 'photos', conflictKey: 'id' },
-  { name: 'visit_comments', conflictKey: 'id' },
-  { name: 'tags', conflictKey: 'id' },
-  { name: 'wishlist', conflictKey: 'id' },
-  { name: 'notifications', conflictKey: 'id' },
-  { name: 'push_subscriptions', conflictKey: 'id' },
-  { name: 'user_settings', conflictKey: 'user_id' },
+  { name: 'couples', conflictKey: 'id', userIdFields: ['created_by'] },
+  { name: 'couple_members', conflictKey: 'id', userIdFields: ['user_id'] },
+  { name: 'profiles', conflictKey: 'user_id', userIdFields: ['user_id'] },
+  { name: 'prefecture_visits', conflictKey: 'id', userIdFields: ['created_by'] },
+  { name: 'visit_locations', conflictKey: 'id', userIdFields: [] },
+  { name: 'photos', conflictKey: 'id', userIdFields: ['created_by'] },
+  { name: 'visit_comments', conflictKey: 'id', userIdFields: ['user_id'] },
+  { name: 'tags', conflictKey: 'id', userIdFields: [] },
+  { name: 'wishlist', conflictKey: 'id', userIdFields: ['created_by'] },
+  { name: 'notifications', conflictKey: 'id', userIdFields: ['recipient_user_id', 'actor_user_id'] },
+  { name: 'push_subscriptions', conflictKey: 'id', userIdFields: ['user_id'] },
+  { name: 'user_settings', conflictKey: 'user_id', userIdFields: ['user_id'] },
 ];
 
 const BATCH_SIZE = 500;
@@ -78,6 +86,14 @@ if (totalRows === 0) {
   process.exit(0);
 }
 
+const userIdMap = await buildUserIdMap(backupDir);
+if (userIdMap) {
+  for (const table of TABLES) {
+    if (table.userIdFields.length === 0) continue;
+    rowsByTable[table.name] = rowsByTable[table.name].map((row) => remapUserIds(row, table.userIdFields, userIdMap));
+  }
+}
+
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 const answer = await rl.question(`\n合計${totalRows}件をSupabaseへ書き戻します（upsert、既存データの削除は行いません）。続行しますか？ (y/N) `);
 rl.close();
@@ -110,6 +126,66 @@ for (const table of TABLES) {
 
 console.log('\n復元結果:');
 console.log(JSON.stringify(summary, null, 2));
+
+async function buildUserIdMap(dir) {
+  const authUsersPath = path.join(dir, 'auth_users.json');
+  if (!fs.existsSync(authUsersPath)) {
+    console.log('auth_users.json が見つからないため、ユーザーIDの付け替えはスキップします（同じプロジェクトへの復元を想定）。');
+    return null;
+  }
+
+  const oldUsers = JSON.parse(fs.readFileSync(authUsersPath, 'utf8'));
+  const currentUsers = await fetchAllAuthUsers();
+  const currentByEmail = new Map(currentUsers.filter((user) => user.email).map((user) => [user.email.toLowerCase(), user.id]));
+
+  const map = new Map();
+  const missing = [];
+  for (const oldUser of oldUsers) {
+    if (!oldUser.email) continue;
+    const newId = currentByEmail.get(oldUser.email.toLowerCase());
+    if (!newId) {
+      missing.push(oldUser.email);
+      continue;
+    }
+    if (newId !== oldUser.id) map.set(oldUser.id, newId);
+  }
+
+  if (missing.length > 0) {
+    console.error('復元先プロジェクトにまだサインアップされていないメールアドレスがあります。先にサインアップしてから再実行してください:');
+    for (const email of missing) console.error(`  - ${email}`);
+    process.exit(1);
+  }
+
+  if (map.size > 0) {
+    console.log(`ユーザーIDを${map.size}件、新しいIDへ置き換えて復元します。`);
+  } else {
+    console.log('ユーザーIDは旧プロジェクトと同じため、付け替えは行いません。');
+  }
+  return map;
+}
+
+function remapUserIds(row, fields, userIdMap) {
+  const next = { ...row };
+  for (const field of fields) {
+    const value = next[field];
+    if (value && userIdMap.has(value)) next[field] = userIdMap.get(value);
+  }
+  return next;
+}
+
+async function fetchAllAuthUsers() {
+  const users = [];
+  for (let page = 1; ; page += 1) {
+    const { data, error } = await supabase.auth.admin.listUsers({ page, perPage: 1000 });
+    if (error) {
+      console.error('failed to read current auth users:', error.message);
+      return users;
+    }
+    users.push(...data.users.map((user) => ({ id: user.id, email: user.email ?? null })));
+    if (data.users.length < 1000) break;
+  }
+  return users;
+}
 
 function resolveBackupDir(argPath) {
   if (argPath) {

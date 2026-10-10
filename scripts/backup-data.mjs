@@ -4,6 +4,11 @@
 // テーブル構造・RLSポリシー・Storageバケット設定は supabase/schema.sql に
 // 記録済みのため、このスクリプトはデータ（行）のバックアップのみを担当する。
 //
+// 各テーブルの行に加えて、ログインアカウント（Supabase Auth）の
+// 「ID⇔メールアドレス」一覧も auth_users.json に保存する。別のSupabase
+// プロジェクトへ復元する際、サインアップし直すとユーザーIDが変わるため、
+// restore-data.mjs がメールアドレスを手がかりに旧ID→新IDへ付け替えるのに使う。
+//
 // 使い方:
 //   1. .env.local に以下を設定する（Gitにはコミットしないこと）
 //        SUPABASE_URL=https://xxxx.supabase.co
@@ -67,6 +72,11 @@ for (const table of TABLES) {
   console.log(`backed up ${table}: ${rows.length} rows`);
 }
 
+const authUsers = await fetchAllAuthUsers();
+fs.writeFileSync(path.join(outDir, 'auth_users.json'), JSON.stringify(authUsers, null, 2), 'utf8');
+summary.auth_users = authUsers.length;
+console.log(`backed up auth_users: ${authUsers.length} rows`);
+
 fs.writeFileSync(
   path.join(outDir, '_meta.json'),
   JSON.stringify({ created_at: new Date().toISOString(), supabase_url: supabaseUrl, tables: summary }, null, 2),
@@ -98,6 +108,20 @@ async function fetchAllRows(table) {
   }
 
   return rows;
+}
+
+async function fetchAllAuthUsers() {
+  const users = [];
+  for (let page = 1; ; page += 1) {
+    const { data, error } = await supabase.auth.admin.listUsers({ page, perPage: 1000 });
+    if (error) {
+      console.error('failed to read auth users:', error.message);
+      return users;
+    }
+    users.push(...data.users.map((user) => ({ id: user.id, email: user.email ?? null })));
+    if (data.users.length < 1000) break;
+  }
+  return users;
 }
 
 function loadEnvFile(fileName) {
