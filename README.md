@@ -165,6 +165,41 @@ supabase functions deploy account-delete
 ```
 
 Edge Functionsは `SUPABASE_SERVICE_ROLE_KEY` を使ってサーバー側で本人確認と削除処理を行います。Service Role Keyはフロントエンドの環境変数には絶対に入れないでください。
+## 完全復元手順（Supabaseが使えなくなった場合）
+
+Supabaseプロジェクトが失われた、または真っさらな新プロジェクトから作り直す場合の手順です。上の「Supabase 設定」「Googleログイン設定」「アカウント管理」の内容をこの順番でまとめたものです。
+
+1. **新しいSupabaseプロジェクトを作成する**
+2. **テーブル・RLS・Storageバケットを復元する**
+   - `SQL Editor` で [supabase/schema.sql](./supabase/schema.sql) を実行します。
+   - これでテーブル12個、RLSポリシー、DB関数（`create_couple`など）、`travel-photos` Storageバケットとそのポリシーが再現されます。
+3. **Edge Functionsをデプロイする**
+   ```bash
+   supabase link --project-ref <新しいプロジェクトのref>
+   supabase functions deploy account-export
+   supabase functions deploy account-deactivate
+   supabase functions deploy account-restore
+   supabase functions deploy account-delete
+   ```
+4. **Authを設定する**
+   - `Authentication > Providers` でEmailを有効化します。
+   - Googleログインを使う場合は「Googleログイン設定」の手順を行います。
+   - お二人がもとと同じメールアドレスで新規サインアップします（既存のログイン情報はバックアップ対象外のため、ここだけは手作業が必要です）。
+5. **行データを復元する**
+   - 事前に `npm run backup:data` で取得しておいた `backups/<日時>/` フォルダを使い、`npm run restore:data` を実行します。
+   - `.env.local` に新プロジェクトの `SUPABASE_URL` と `SUPABASE_SERVICE_ROLE_KEY` を設定してから実行してください。
+   - このスクリプトはテーブルの行データのみを復元します（upsert、既存データの削除なし）。
+6. **写真を復元する**
+   - 写真ファイル本体はDBバックアップの対象外です。NASに保存してある原本を、同じフォルダ構成（`travel-photos/{couple_id}/{visit_id}/...`）でStorageへ再アップロードしてください。
+7. **アプリ側の環境変数を更新する**
+   - `.env.local`（ローカル開発用）と、Vercelの `Settings > Environment Variables` の両方で `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` を新プロジェクトの値に差し替えます。
+   - Google Cloud Console のOAuth設定にも新しいURLが必要であれば追加します。
+
+### この手順で戻らないもの
+
+- お二人の**ログインアカウント自体**（サインアップし直しが必要。新しいユーザーIDになるため、復元したデータとの紐付けにはID対応の調整が必要になる場合があります）
+- Supabase Dashboardで個別に設定した、schema.sqlに含まれないAuth関連の細かい設定（メールテンプレートなど）
+
 ## Existing photo thumbnail migration
 
 New uploads create lightweight WebP thumbnails automatically. For photos uploaded before thumbnail support, run this one-time script from the project root after confirming `supabase/schema.sql` has been applied.
