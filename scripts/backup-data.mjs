@@ -9,6 +9,10 @@
 // プロジェクトへ復元する際、サインアップし直すとユーザーIDが変わるため、
 // restore-data.mjs がメールアドレスを手がかりに旧ID→新IDへ付け替えるのに使う。
 //
+// supabase/schema.sql（テーブル構造・RLS・Storage設定）のコピーも一緒に
+// 保存する。schema.sql自体はGitで管理されているが、このバックアップフォルダ
+// だけ見れば復元に必要なものが揃っているようにするため。
+//
 // 使い方:
 //   1. .env.local に以下を設定する（Gitにはコミットしないこと）
 //        SUPABASE_URL=https://xxxx.supabase.co
@@ -76,6 +80,12 @@ const authUsers = await fetchAllAuthUsers();
 fs.writeFileSync(path.join(outDir, 'auth_users.json'), JSON.stringify(authUsers, null, 2), 'utf8');
 summary.auth_users = authUsers.length;
 console.log(`backed up auth_users: ${authUsers.length} rows`);
+
+const schemaPath = path.resolve(process.cwd(), 'supabase', 'schema.sql');
+if (fs.existsSync(schemaPath)) {
+  fs.copyFileSync(schemaPath, path.join(outDir, 'schema.sql'));
+  console.log('copied schema.sql');
+}
 
 fs.writeFileSync(
   path.join(outDir, '_meta.json'),
